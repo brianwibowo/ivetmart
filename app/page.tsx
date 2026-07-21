@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import { About } from "@/components/sections/about";
 import { DreamDecor } from "@/components/sections/dream-decor";
 import { FeaturedCollection } from "@/components/sections/featured-collection";
@@ -36,15 +37,29 @@ export default function Home() {
 	return (
 		<main className="pb-20">
 			<Hero />
-			<DreamDecor />
-			<FeaturedCollection />
+			<ScrollReveal delay={100}>
+				<DreamDecor />
+			</ScrollReveal>
+			<ScrollReveal delay={150}>
+				<FeaturedCollection />
+			</ScrollReveal>
 			<Suspense fallback={<ProductGridSkeleton />}>
-				<ProductGrid limit={8} />
+				<ScrollReveal delay={200}>
+					<ProductGrid limit={8} />
+				</ScrollReveal>
 			</Suspense>
-			<SustainableBanner />
-			<About />
-			<Journal />
-			<Newsletter />
+			<ScrollReveal delay={250}>
+				<SustainableBanner />
+			</ScrollReveal>
+			<ScrollReveal delay={300}>
+				<About />
+			</ScrollReveal>
+			<ScrollReveal delay={350}>
+				<Journal />
+			</ScrollReveal>
+			<ScrollReveal delay={400}>
+				<Newsletter />
+			</ScrollReveal>
 		</main>
 	);
 }
