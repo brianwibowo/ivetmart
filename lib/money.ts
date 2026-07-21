@@ -35,6 +35,7 @@ const edgeCaseCurrencies = {
 	CLP: 0,
 	DJF: 0,
 	GNF: 0,
+	IDR: 0,
 	JPY: 0,
 	KMF: 0,
 	KRW: 0,

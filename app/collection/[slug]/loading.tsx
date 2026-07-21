@@ -1,10 +1,11 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function SearchLoading() {
+export default function CollectionLoading() {
 	return (
 		<div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-10 space-y-8">
 			<div className="space-y-3 border-b border-border pb-6">
-				<Skeleton className="h-8 w-64 bg-muted" />
+				<Skeleton className="h-9 w-64 bg-muted" />
+				<Skeleton className="h-4 w-96 max-w-full bg-muted/60" />
 			</div>
 
 			<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

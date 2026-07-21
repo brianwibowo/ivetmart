@@ -15,14 +15,11 @@ type ProductGridProps = {
 	eyebrow?: string;
 	title?: string;
 	description?: string;
-	products?: (
-		| Product
-		| APICollectionGetByIdResult["productCollections"][number]["product"]
-		| NonNullable<APIProductGetByIdResult>
-	)[];
+	products?: any[];
 	limit?: number;
 	showViewAll?: boolean;
 	viewAllHref?: string;
+	categorySlug?: string;
 };
 
 export async function ProductGrid({

@@ -23,10 +23,10 @@ type Variant = {
 type MediaGalleryProps = {
 	images: string[];
 	productName: string;
-	variants: Variant[];
+	variants?: any[];
 };
 
-export function MediaGallery({ images, productName, variants }: MediaGalleryProps) {
+export function MediaGallery({ images, productName, variants = [] }: MediaGalleryProps) {
 	const searchParams = useSearchParams();
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [isZoomed, setIsZoomed] = useState(false);
@@ -39,9 +39,10 @@ export function MediaGallery({ images, productName, variants }: MediaGalleryProp
 	const variantImageIndex = useMemo(() => {
 		const selectedVariant = variants.find(
 			(v) =>
+				v.combinations &&
 				v.combinations.length > 0 &&
 				v.combinations.every(
-					(c) => searchParams.get(c.variantValue.variantType.label) === c.variantValue.value,
+					(c: any) => searchParams.get(c.variantValue?.variantType?.label) === c.variantValue?.value,
 				),
 		);
 

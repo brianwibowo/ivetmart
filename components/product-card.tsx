@@ -18,7 +18,7 @@ export function ProductCard({
 	product,
 	priority = false,
 }: {
-	product: BrowseProduct | CollectionProduct | FullProduct;
+	product: any;
 	priority?: boolean;
 }) {
 	const variants = "variants" in product ? product.variants : null;
@@ -26,7 +26,7 @@ export function ProductCard({
 	const { minPrice, maxPrice } =
 		variants && firstVariantPrice !== null
 			? variants.reduce(
-					(acc, v) => {
+					(acc: { minPrice: bigint; maxPrice: bigint }, v: any) => {
 						const price = BigInt(v.price);
 						return {
 							minPrice: price < acc.minPrice ? price : acc.minPrice,
@@ -46,7 +46,7 @@ export function ProductCard({
 
 	const allImages = [
 		...(product.images ?? []),
-		...(variants?.flatMap((v) => v.images ?? []).filter((img) => !(product.images ?? []).includes(img)) ??
+		...(variants?.flatMap((v: any) => v.images ?? []).filter((img: string) => !(product.images ?? []).includes(img)) ??
 			[]),
 	];
 	const primaryImage = allImages[0];

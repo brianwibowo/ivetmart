@@ -37,7 +37,7 @@ type Variant = {
 };
 
 type AddToCartButtonProps = {
-	variants: Variant[];
+	variants: any[];
 	product: {
 		id: string;
 		name: string;
@@ -75,8 +75,8 @@ export function AddToCartButton({
 		});
 
 		return variants.find((variant) =>
-			variant.combinations.every(
-				(combination) =>
+			variant.combinations?.every(
+				(combination: any) =>
 					paramsOptions[combination.variantValue.variantType.label] === combination.variantValue.value,
 			),
 		);
@@ -94,7 +94,7 @@ export function AddToCartButton({
 	);
 
 	const unitPrice = volumePrice ?? selectedVariant?.price;
-	const totalPrice = unitPrice ? BigInt(unitPrice) * BigInt(effectiveQuantity) : null;
+	const totalPrice = unitPrice ? BigInt(Math.floor(Number(unitPrice))) * BigInt(effectiveQuantity) : null;
 
 	const buttonText = useMemo(() => {
 		if (!selectedVariant) return "Select options";
@@ -111,8 +111,8 @@ export function AddToCartButton({
 		const fmt = (amount: bigint) => formatMoney({ amount, currency: CURRENCY, locale: LOCALE });
 
 		if (selectedVariant) {
-			const price = BigInt(selectedVariant.price);
-			const listPrice = BigInt(selectedVariant.originalPrice);
+			const price = BigInt(selectedVariant.price ?? 0);
+			const listPrice = selectedVariant.originalPrice ? BigInt(selectedVariant.originalPrice) : price;
 			const onSale = listPrice > price;
 			return {
 				display: fmt(price),
@@ -121,9 +121,9 @@ export function AddToCartButton({
 			};
 		}
 
-		const prices = variants.map((v) => BigInt(v.price));
-		const minPrice = prices.reduce((min, p) => (p < min ? p : min), prices[0] ?? 0n);
-		const maxPrice = prices.reduce((max, p) => (p > max ? p : max), prices[0] ?? 0n);
+		const prices = variants.map((v) => BigInt(v.price ?? 0));
+		const minPrice = prices.reduce((min, p) => (p < min ? p : min), prices[0] ?? BigInt(0));
+		const maxPrice = prices.reduce((max, p) => (p > max ? p : max), prices[0] ?? BigInt(0));
 		return {
 			display: minPrice === maxPrice ? fmt(minPrice) : `${fmt(minPrice)} - ${fmt(maxPrice)}`,
 			compareAt: null,
@@ -180,7 +180,7 @@ export function AddToCartButton({
 			// with the updated cart — compare against what we asked for so the
 			// optimistic item doesn't silently vanish on revert.
 			const result = await addToCart(variantId, addedQuantity);
-			const line = result.cart?.lineItems.find((item) => item.productVariant.id === variantId);
+			const line = result.cart?.lineItems.find((item: any) => item.productVariant.id === variantId);
 			if (!result.success || !line) {
 				toast.error("This item is out of stock");
 			} else if (line.quantity < previousQuantity + addedQuantity) {

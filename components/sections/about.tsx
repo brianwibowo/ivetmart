@@ -11,8 +11,8 @@ export function About() {
 						<span className="italic"> you live.</span>
 					</h2>
 					<p className="mt-5 text-muted-foreground text-base leading-relaxed">
-						Your Next Store is a small studio with one quiet ambition: design objects that make rooms feel
-						lived-in, not staged. We work with makers we know by name, in batches we can measure on one page.
+						Ivet Mart adalah marketplace resmi civitas Universitas Ivet Semarang (UNISVET) yang menghadirkan
+						aneka produk khas Semarang dan merchandise eksklusif pilihan berkualitas tinggi.
 					</p>
 					<div className="mt-8 grid grid-cols-2 gap-6 max-w-md">
 						<div className="border-t border-foreground/20 pt-4">

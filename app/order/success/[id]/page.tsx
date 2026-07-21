@@ -35,7 +35,7 @@ const OrderDetails = async ({ params }: { params: Promise<{ id: string }> }) => 
 	const shipping = order.orderData.shipping;
 	const customer = order.orderData.customer;
 
-	const subtotal = lineItems.reduce((acc, item) => {
+	const subtotal = lineItems.reduce((acc: bigint, item: any) => {
 		return acc + BigInt(item.productVariant.price) * BigInt(item.quantity);
 	}, BigInt(0));
 
@@ -66,7 +66,7 @@ const OrderDetails = async ({ params }: { params: Promise<{ id: string }> }) => 
 					<h2 className="font-medium">Order Items</h2>
 				</div>
 				<div className="divide-y divide-border">
-					{lineItems.map((item) => (
+					{lineItems.map((item: any) => (
 						<OrderItem key={item.id} item={item} />
 					))}
 				</div>
@@ -138,7 +138,7 @@ type OrderLineItem = {
 	};
 };
 
-function OrderItem({ item }: { item: OrderLineItem }) {
+function OrderItem({ item }: { item: any }) {
 	const { productVariant, quantity } = item;
 	const { product } = productVariant;
 

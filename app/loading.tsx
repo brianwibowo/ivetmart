@@ -1,12 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function SearchLoading() {
+export default function Loading() {
 	return (
-		<div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-10 space-y-8">
-			<div className="space-y-3 border-b border-border pb-6">
-				<Skeleton className="h-8 w-64 bg-muted" />
+		<div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-10 space-y-10 animate-fade-in">
+			{/* Header / Hero Skeleton */}
+			<div className="space-y-4">
+				<Skeleton className="h-10 w-48 bg-muted" />
+				<Skeleton className="h-5 w-96 max-w-full bg-muted/60" />
 			</div>
 
+			{/* Grid Skeleton */}
 			<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 				{Array.from({ length: 8 }).map((_, i) => (
 					<div key={i} className="space-y-4 rounded-xl border border-border/50 p-4 bg-card">

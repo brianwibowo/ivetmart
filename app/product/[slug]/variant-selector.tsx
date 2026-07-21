@@ -41,11 +41,11 @@ type VariantSelectorProps = {
 	selectedVariantId: string | undefined;
 };
 
-function processVariants(variants: Variant[]) {
+function processVariants(variants: any[]): VariantGroup[] {
 	const allCombinations = variants.flatMap((variant) =>
-		variant.combinations.map((combination) => ({
+		variant.combinations?.map((combination: any) => ({
 			variantValue: combination.variantValue,
-		})),
+		})) ?? [],
 	);
 
 	// Track seen option IDs per label for O(1) deduplication
@@ -130,7 +130,7 @@ export function VariantSelector({ variants, selectedVariantId }: VariantSelector
 
 		const firstVariant = variants[0];
 		const params = new URLSearchParams();
-		firstVariant.combinations.forEach((c) => {
+		firstVariant.combinations?.forEach((c: any) => {
 			params.set(c.variantValue.variantType.label, c.variantValue.value);
 		});
 		router.replace(`${pathname}?${params.toString()}`, { scroll: false });

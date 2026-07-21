@@ -1,0 +1,15 @@
+Dockerfile
+docker-compose*.yml
+.dockerignore
+.git
+.github
+.next
+node_modules
+.env*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun.lockb
+README.md
+Walkthrough.md
+implementation_plan.md

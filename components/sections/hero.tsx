@@ -94,7 +94,7 @@ export function Hero() {
 					<div className="relative z-10 px-2 sm:px-6 pb-8 sm:pb-10 pointer-events-none">
 						<p className="yns-display select-none text-background leading-[0.85] tracking-[-0.04em] text-[20vw] sm:text-[16vw] lg:text-[14vw] font-medium">
 							<span className="bg-gradient-to-b from-background to-background/40 bg-clip-text text-transparent">
-								YOUR NEXT STORE
+								IVET MART
 							</span>
 						</p>
 					</div>

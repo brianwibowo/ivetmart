@@ -40,7 +40,7 @@ async function getStoreMetadata(): Promise<Metadata> {
 	"use cache";
 	cacheLife("hours");
 	const me = await meGetCached();
-	const storeName = me.store.name || "Your Next Store";
+	const storeName = me.store.name || "Ivet Mart";
 	const storeDescription = me.store.settings?.storeDescription || "Your next e-commerce store";
 	const faviconUrl = getStoreFaviconUrl(me.store.settings) ?? "/logo.svg";
 	const storeLogo =
@@ -136,16 +136,16 @@ async function CartProviderWrapper({ children }: { children: React.ReactNode }) 
 		<CartProvider initialCart={cart} initialCartId={cartId}>
 			<div className="flex min-h-screen flex-col bg-background">
 				<AnnouncementBar />
-				<header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+				<header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl">
 					<div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
 						<div className="flex items-center justify-between h-16">
 							<div className="flex items-center gap-10">
 								<YnsLink
 									prefetch={"eager"}
 									href="/"
-									className="yns-display text-xl font-medium tracking-tight text-foreground"
+									className="yns-display text-xl font-bold tracking-tight text-[#80070A] font-serif"
 								>
-									Your Next Store
+									Ivet Mart
 								</YnsLink>
 								<Navbar links={links} />
 							</div>

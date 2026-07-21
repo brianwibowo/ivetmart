@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 	};
 }
 
-function CollectionHeader({ collection }: { collection: APICollectionGetByIdResult }) {
+function CollectionHeader({ collection }: { collection: any }) {
 	return (
 		<section className="relative overflow-hidden bg-secondary/30">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,9 +107,9 @@ function ProductGridSkeleton() {
 	);
 }
 
-async function CollectionProducts({ collection }: { collection: APICollectionGetByIdResult }) {
-	const ids = collection.productCollections.map((pc) => pc.product.id);
-	const products = (await Promise.all(ids.map((id) => commerce.productGet({ idOrSlug: id })))).filter(
+async function CollectionProducts({ collection }: { collection: any }) {
+	const ids = collection.productCollections.map((pc: any) => pc.product.id);
+	const products = (await Promise.all(ids.map((id: string) => commerce.productGet({ idOrSlug: id })))).filter(
 		(product) => product !== null,
 	);
 

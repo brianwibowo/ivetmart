@@ -9,7 +9,7 @@ const items = [
 
 export function AnnouncementBar() {
 	return (
-		<div className="bg-foreground text-background text-[12px] tracking-[0.18em] uppercase">
+		<div className="bg-[#580507] text-[#F8C300] text-[12px] tracking-[0.18em] uppercase font-medium">
 			<div className="relative overflow-hidden">
 				<div className="flex whitespace-nowrap yns-marquee py-2.5">
 					{[...items, ...items, ...items].map((item, idx) => (

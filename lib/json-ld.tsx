@@ -33,10 +33,10 @@ export function JsonLdScript({ data }: { data: Record<string, unknown> }) {
 }
 
 export async function buildProductJsonLd(
-	product: APIProductGetByIdResult,
-	reviews: APIProductReviewsBrowseResult | null,
+	product: any,
+	reviews: any,
 ): Promise<Record<string, unknown>> {
-	const prices = product.variants.map((v) => Number(v.price));
+	const prices = product.variants.map((v: any) => Number(v.price));
 	const lowPrice = getDecimalPrice(String(Math.min(...prices)));
 	const highPrice = getDecimalPrice(String(Math.max(...prices)));
 	const baseUrl = getBaseUrl();
@@ -81,7 +81,7 @@ export async function buildProductJsonLd(
 			worstRating: 1,
 		};
 
-		jsonLd.review = reviews.data.map((r) => ({
+		jsonLd.review = reviews.data.map((r: any) => ({
 			"@type": "Review",
 			author: { "@type": "Person", name: r.author },
 			datePublished: r.createdAt,
@@ -98,7 +98,7 @@ export async function buildProductJsonLd(
 	return jsonLd;
 }
 
-export function buildProductBreadcrumbJsonLd(product: APIProductGetByIdResult): Record<string, unknown> {
+export function buildProductBreadcrumbJsonLd(product: any): Record<string, unknown> {
 	const baseUrl = getBaseUrl();
 	const items = [
 		{ "@type": "ListItem", position: 1, name: "Home", item: baseUrl || undefined },
@@ -124,7 +124,7 @@ export function buildProductBreadcrumbJsonLd(product: APIProductGetByIdResult): 
 	};
 }
 
-export function buildCollectionJsonLd(collection: APICollectionGetByIdResult): Record<string, unknown> {
+export function buildCollectionJsonLd(collection: any): Record<string, unknown> {
 	const baseUrl = getBaseUrl();
 
 	return {
@@ -134,8 +134,8 @@ export function buildCollectionJsonLd(collection: APICollectionGetByIdResult): R
 		description:
 			typeof collection.description === "string" ? collection.description : `${collection.name} collection`,
 		image: collection.image ?? undefined,
-		numberOfItems: collection.productCollections.length,
-		hasPart: collection.productCollections.map((pc) => ({
+		numberOfItems: collection.productCollections?.length ?? 0,
+		hasPart: collection.productCollections?.map((pc: any) => ({
 			"@type": "Product",
 			name: pc.product.name,
 			url: `${baseUrl}/product/${pc.product.slug}`,
@@ -145,7 +145,7 @@ export function buildCollectionJsonLd(collection: APICollectionGetByIdResult): R
 }
 
 export function buildCollectionBreadcrumbJsonLd(
-	collection: APICollectionGetByIdResult,
+	collection: any,
 ): Record<string, unknown> {
 	const baseUrl = getBaseUrl();
 
@@ -185,7 +185,7 @@ export function buildCategoryBreadcrumbJsonLd(
 
 export async function StoreJsonLd() {
 	const me = await meGetCached();
-	const storeName = me.store.name || "Your Next Store";
+	const storeName = me.store.name || "Ivet Mart";
 	const storeDescription = me.store.settings?.storeDescription || undefined;
 	const baseUrl = getBaseUrl();
 	const ogImage = me.store.settings?.ogimage || undefined;
