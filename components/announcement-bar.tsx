@@ -1,10 +1,10 @@
 import { Truck } from "lucide-react";
 
 const items = [
-	"Complimentary shipping on orders over $80",
-	"New Spring Collection — handcrafted in small batches",
-	"Free returns within 30 days",
-	"Members earn double rewards through Sunday",
+	"Selamat Datang di Ivet Mart — Marketplace Resmi Civitas UNISVET",
+	"Produk Khas Semarang & Merchandise Eksklusif UNISVET",
+	"Gratis Pengiriman Wilayah Semarang & Kampus UNISVET",
+	"Dapatkan Penawaran Terbaik Setiap Hari di Ivet Mart",
 ];
 
 export function AnnouncementBar() {
