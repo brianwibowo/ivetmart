@@ -336,10 +336,15 @@ export const STORE_INFO = {
 			favicon: { imageUrl: "/logo.png" },
 			ogimage: "/logo.png",
 			defaultLanguage: "id-ID",
-			enabledTools: { blog: true, newsletterPopup: false, contactForm: true, reviews: true, cookieConsent: false },
+			enabledTools: {
+				blog: true,
+				newsletterPopup: false,
+				contactForm: true,
+				reviews: true,
+				cookieConsent: false,
+			},
 			newsletterPopup: null as any,
-			announcementBar:
-				"Selamat Datang di Ivet Mart — Pusat Produk Khas Semarang & Merchandise Resmi UNISVET",
+			announcementBar: "Selamat Datang di Ivet Mart — Pusat Produk Khas Semarang & Merchandise Resmi UNISVET",
 		},
 	},
 	publicUrl: getCanonicalUrl(),
@@ -365,7 +370,7 @@ export const commerce = {
 	}) => {
 		let list = PRODUCTS.filter((p) => p.active);
 		if (options?.category) {
-			const catObj = CATEGORIES.find(c => c.id === options.category || c.slug === options.category);
+			const catObj = CATEGORIES.find((c) => c.id === options.category || c.slug === options.category);
 			const targetCatId = catObj ? catObj.id : options.category;
 			const categoryFiltered = list.filter((p) => p.categoryId === targetCatId);
 			if (categoryFiltered.length > 0) {
@@ -375,9 +380,7 @@ export const commerce = {
 		const searchKeyword = options?.query || options?.search;
 		if (searchKeyword) {
 			const q = searchKeyword.toLowerCase();
-			list = list.filter(
-				(p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
-			);
+			list = list.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
 		}
 		if (options?.limit) {
 			list = list.slice(0, options.limit);
@@ -390,7 +393,10 @@ export const commerce = {
 				category: cat ? { id: cat.id, name: cat.name, slug: cat.slug } : undefined,
 			};
 		});
-		return { data: enrichedList, meta: { total: enrichedList.length, count: enrichedList.length, pagesCount: 1 } };
+		return {
+			data: enrichedList,
+			meta: { total: enrichedList.length, count: enrichedList.length, pagesCount: 1 },
+		};
 	},
 	productGet: async ({ idOrSlug }: { idOrSlug: string }) => {
 		const product = PRODUCTS.find((p) => p.id === idOrSlug || p.slug === idOrSlug);
@@ -454,8 +460,18 @@ export const commerce = {
 	legalPageBrowse: async () => {
 		return {
 			data: [
-				{ id: "terms", label: "Syarat & Ketentuan", href: "/legal/terms", updatedAt: new Date().toISOString() },
-				{ id: "privacy", label: "Kebijakan Privasi", href: "/legal/privacy", updatedAt: new Date().toISOString() },
+				{
+					id: "terms",
+					label: "Syarat & Ketentuan",
+					href: "/legal/terms",
+					updatedAt: new Date().toISOString(),
+				},
+				{
+					id: "privacy",
+					label: "Kebijakan Privasi",
+					href: "/legal/privacy",
+					updatedAt: new Date().toISOString(),
+				},
 			],
 		};
 	},
@@ -478,11 +494,9 @@ export const commerce = {
 	search: async ({ query, limit = 6 }: { query: string; limit?: number }) => {
 		const q = query.toLowerCase();
 		const products = PRODUCTS.filter(
-			(p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+			(p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
 		).slice(0, limit);
-		const categories = CATEGORIES.filter(
-			(c) => c.name.toLowerCase().includes(q)
-		).slice(0, limit);
+		const categories = CATEGORIES.filter((c) => c.name.toLowerCase().includes(q)).slice(0, limit);
 		const items = products.map((p) => ({
 			id: p.id,
 			name: p.name,

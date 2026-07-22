@@ -14,13 +14,7 @@ type BrowseProduct = APIProductsBrowseResult["data"][number];
 type CollectionProduct = APICollectionGetByIdResult["productCollections"][number]["product"];
 type FullProduct = NonNullable<APIProductGetByIdResult>;
 
-export function ProductCard({
-	product,
-	priority = false,
-}: {
-	product: any;
-	priority?: boolean;
-}) {
+export function ProductCard({ product, priority = false }: { product: any; priority?: boolean }) {
 	const variants = "variants" in product ? product.variants : null;
 	const firstVariantPrice = variants?.[0] ? BigInt(variants[0].price) : null;
 	const { minPrice, maxPrice } =
@@ -46,8 +40,9 @@ export function ProductCard({
 
 	const allImages = [
 		...(product.images ?? []),
-		...(variants?.flatMap((v: any) => v.images ?? []).filter((img: string) => !(product.images ?? []).includes(img)) ??
-			[]),
+		...(variants
+			?.flatMap((v: any) => v.images ?? [])
+			.filter((img: string) => !(product.images ?? []).includes(img)) ?? []),
 	];
 	const primaryImage = allImages[0];
 	const secondaryImage = allImages[1];

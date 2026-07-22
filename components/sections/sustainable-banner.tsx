@@ -37,7 +37,8 @@ export function SustainableBanner() {
 							Our brilliance &<span className="italic"> eco-touch.</span>
 						</h2>
 						<p className="mt-4 text-foreground/80 text-base max-w-md leading-relaxed">
-							Kami percaya produk unggulan civitas UNISVET dibuat dengan komitmen mutu terbaik dan bahan pilihan berkualitas tinggi. Setiap produk Ivet Mart dibuat dengan standar unggul.
+							Kami percaya produk unggulan civitas UNISVET dibuat dengan komitmen mutu terbaik dan bahan
+							pilihan berkualitas tinggi. Setiap produk Ivet Mart dibuat dengan standar unggul.
 						</p>
 						<YnsLink
 							href="#story"

@@ -1,4 +1,3 @@
-import type { APICollectionGetByIdResult } from "commerce-kit";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import Link from "next/link";

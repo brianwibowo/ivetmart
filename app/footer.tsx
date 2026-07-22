@@ -126,7 +126,8 @@ export function Footer() {
 							IM
 						</YnsLink>
 						<p className="mt-4 text-sm text-white/80 leading-relaxed font-normal">
-							Marketplace resmi civitas Universitas Ivet Semarang — Menghadirkan produk khas Semarang dan merchandise eksklusif UNISVET.
+							Marketplace resmi civitas Universitas Ivet Semarang — Menghadirkan produk khas Semarang dan
+							merchandise eksklusif UNISVET.
 						</p>
 						<div className="mt-6 flex items-center gap-3">
 							<a

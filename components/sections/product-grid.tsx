@@ -1,8 +1,4 @@
-import type {
-	APICollectionGetByIdResult,
-	APIProductGetByIdResult,
-	APIProductsBrowseResult,
-} from "commerce-kit";
+import type { APIProductsBrowseResult } from "commerce-kit";
 import { ArrowUpRightIcon } from "lucide-react";
 import { cacheLife } from "next/cache";
 import { ProductCard } from "@/components/product-card";

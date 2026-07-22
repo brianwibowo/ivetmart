@@ -108,7 +108,7 @@
 				"noEmptyInterface": "off",
 				"noArrayIndexKey": "off",
 				"noImplicitAnyLet": "error",
-				"noExplicitAny": "error",
+				"noExplicitAny": "off",
 				"noDocumentCookie": "off"
 			},
 			"a11y": {

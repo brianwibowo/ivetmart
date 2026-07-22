@@ -1,8 +1,3 @@
-import type {
-	APICollectionGetByIdResult,
-	APIProductGetByIdResult,
-	APIProductReviewsBrowseResult,
-} from "commerce-kit";
 import { getCanonicalUrl, meGetCached } from "@/lib/commerce";
 import { CURRENCY } from "@/lib/constants";
 
@@ -32,10 +27,7 @@ export function JsonLdScript({ data }: { data: Record<string, unknown> }) {
 	);
 }
 
-export async function buildProductJsonLd(
-	product: any,
-	reviews: any,
-): Promise<Record<string, unknown>> {
+export async function buildProductJsonLd(product: any, reviews: any): Promise<Record<string, unknown>> {
 	const prices = product.variants.map((v: any) => Number(v.price));
 	const lowPrice = getDecimalPrice(String(Math.min(...prices)));
 	const highPrice = getDecimalPrice(String(Math.max(...prices)));
@@ -144,9 +136,7 @@ export function buildCollectionJsonLd(collection: any): Record<string, unknown> 
 	};
 }
 
-export function buildCollectionBreadcrumbJsonLd(
-	collection: any,
-): Record<string, unknown> {
+export function buildCollectionBreadcrumbJsonLd(collection: any): Record<string, unknown> {
 	const baseUrl = getBaseUrl();
 
 	return {

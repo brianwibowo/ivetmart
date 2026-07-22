@@ -42,10 +42,11 @@ type VariantSelectorProps = {
 };
 
 function processVariants(variants: any[]): VariantGroup[] {
-	const allCombinations = variants.flatMap((variant) =>
-		variant.combinations?.map((combination: any) => ({
-			variantValue: combination.variantValue,
-		})) ?? [],
+	const allCombinations = variants.flatMap(
+		(variant) =>
+			variant.combinations?.map((combination: any) => ({
+				variantValue: combination.variantValue,
+			})) ?? [],
 	);
 
 	// Track seen option IDs per label for O(1) deduplication
