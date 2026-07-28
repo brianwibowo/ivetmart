@@ -1,7 +1,5 @@
 import { commerce, getCanonicalUrl, meGetCached } from "@/lib/commerce";
 
-export const dynamic = "force-dynamic";
-
 const FEATURED_PRODUCTS = 30;
 const FEATURED_COLLECTIONS = 15;
 const FEATURED_POSTS = 20;
