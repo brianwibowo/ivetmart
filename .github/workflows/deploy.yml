@@ -55,18 +55,31 @@ jobs:
           script: |
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
 
-            # 1. Pastikan Docker Network ada
+            # 1. Create Docker network if not existing
             docker network create ivetmart-net || true
 
-            # 2. Buat file /root/ivetmart.env HANYA JIKA BELUM ADA (1x setup saja)
-            if [ ! -f /root/ivetmart.env ]; then
-              printf "NODE_ENV=production\nPORT=3000\nHOSTNAME=0.0.0.0\nDATABASE_URL=postgresql://postgres:ivetmart_db_password_2026@ivetmart-db:5432/ivetmart\nBETTER_AUTH_SECRET=ivetmart_secret_key_change_me_32chars\nBETTER_AUTH_URL=https://techno-ivetmart.id\nNEXT_PUBLIC_URL=https://techno-ivetmart.id\nYNS_API_KEY=test_key\n" > /root/ivetmart.env
+            # 2. Check & auto-create Postgres DB container if not running
+            if ! docker ps -a --format '{{.Names}}' | grep -q '^ivetmart-db$'; then
+              docker run -d \
+                --name ivetmart-db \
+                --restart always \
+                --network ivetmart-net \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=ivetmart_db_password_2026 \
+                -e POSTGRES_DB=ivetmart \
+                postgres:16-alpine
+              sleep 5
+            elif ! docker ps --format '{{.Names}}' | grep -q '^ivetmart-db$'; then
+              docker start ivetmart-db
+              sleep 3
             fi
 
-            # 3. Pull image web terbaru & restart container web
+            # 3. Pull latest image & restart web container
             docker pull ghcr.io/${{ github.repository }}:latest
             docker stop ivetmart-web || true
             docker rm ivetmart-web || true
+
+            printf "NODE_ENV=production\nPORT=3000\nHOSTNAME=0.0.0.0\nDATABASE_URL=postgresql://postgres:ivetmart_db_password_2026@ivetmart-db:5432/ivetmart\nBETTER_AUTH_SECRET=ivetmart_secret_key_change_me_32chars\nBETTER_AUTH_URL=https://techno-ivetmart.id\nNEXT_PUBLIC_URL=https://techno-ivetmart.id\nYNS_API_KEY=test_key\n" > /root/ivetmart.env
 
             docker run -d \
               --name ivetmart-web \
@@ -76,9 +89,9 @@ jobs:
               --env-file /root/ivetmart.env \
               ghcr.io/${{ github.repository }}:latest
 
-            # 4. Sinkronisasi skema DB baru jika ada perubahan tabel (Aman untuk data prod)
+            # 4. Auto-push database schema & seed initial data inside container
             sleep 5
             docker exec ivetmart-web bun run db:push || true
+            docker exec ivetmart-web bun run db:seed || true
 
-            # Clean up docker images gantung
             docker system prune -f
