@@ -3,11 +3,13 @@
  *
  * Tabbed table of seller stores by status (Pending, Active, Rejected, Suspended)
  * with instant approval and rejection actions.
+ * Uses ActionForm + SubmitButton for toast feedback.
  */
 
 import { desc, eq } from "drizzle-orm";
 import { CheckCircle, Clock, MapPin, Store, XCircle } from "lucide-react";
 import { approveSellerAction, rejectSellerAction } from "@/app/admin/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -107,7 +109,7 @@ export default async function AdminSellersPage() {
 
 											{/* Action Buttons */}
 											<div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-border/40">
-												<form action={approveSellerAction}>
+												<ActionForm action={approveSellerAction}>
 													<input type="hidden" name="storeId" value={store.id} />
 													<SubmitButton
 														loadingText="Memproses..."
@@ -116,8 +118,8 @@ export default async function AdminSellersPage() {
 														<CheckCircle className="h-4 w-4 mr-1.5" />
 														Setujui Toko
 													</SubmitButton>
-												</form>
-												<form action={rejectSellerAction}>
+												</ActionForm>
+												<ActionForm action={rejectSellerAction}>
 													<input type="hidden" name="storeId" value={store.id} />
 													<SubmitButton
 														loadingText="Memproses..."
@@ -127,7 +129,7 @@ export default async function AdminSellersPage() {
 														<XCircle className="h-4 w-4 mr-1.5" />
 														Tolak
 													</SubmitButton>
-												</form>
+												</ActionForm>
 											</div>
 										</div>
 									))}

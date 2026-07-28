@@ -2,11 +2,13 @@
  * Buyer Shipping Addresses Page — Ivet Mart
  *
  * Address book management for logged-in buyers.
+ * Uses ActionForm + SubmitButton for toast feedback.
  */
 
 import { desc, eq } from "drizzle-orm";
 import { Check, Home, MapPin, Plus, Trash2 } from "lucide-react";
 import { createAddressAction, deleteAddressAction } from "@/app/account/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,7 +90,7 @@ export default async function BuyerAddressesPage() {
 										</div>
 
 										<div className="flex items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
-											<form action={deleteAddressAction}>
+											<ActionForm action={deleteAddressAction}>
 												<input type="hidden" name="addressId" value={addr.id} />
 												<SubmitButton
 													variant="ghost"
@@ -98,7 +100,7 @@ export default async function BuyerAddressesPage() {
 												>
 													<Trash2 className="h-3.5 w-3.5" />
 												</SubmitButton>
-											</form>
+											</ActionForm>
 										</div>
 									</div>
 								))}
@@ -118,7 +120,7 @@ export default async function BuyerAddressesPage() {
 						</CardTitle>
 						<CardDescription>Isi data penerima & alamat lengkap pengiriman.</CardDescription>
 					</CardHeader>
-					<form action={createAddressAction}>
+					<ActionForm action={createAddressAction}>
 						<CardContent className="space-y-4">
 							<div className="space-y-2">
 								<Label htmlFor="addr-label">Label Alamat</Label>
@@ -184,7 +186,7 @@ export default async function BuyerAddressesPage() {
 								Simpan Alamat
 							</SubmitButton>
 						</CardContent>
-					</form>
+					</ActionForm>
 				</Card>
 			</div>
 		</div>

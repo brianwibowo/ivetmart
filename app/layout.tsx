@@ -119,8 +119,8 @@ async function getNavLinks(): Promise<NavLink[]> {
 	]);
 	const blogEnabled = me?.store.settings?.enabledTools?.blog ?? false;
 	return [
-		{ href: "/", label: "Home" },
-		{ href: "/products", label: "Products" },
+		{ href: "/", label: "Beranda" },
+		{ href: "/products", label: "Semua Produk" },
 		...collections.data.map((collection) => ({
 			href: `/collection/${collection.slug}`,
 			label: collection.name,

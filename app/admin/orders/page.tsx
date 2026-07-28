@@ -1,22 +1,31 @@
 /**
  * Admin Orders Monitoring Page — Ivet Mart
  *
- * Platform-wide transaction & order monitoring across all sellers.
+ * Platform-wide transaction & order monitoring across all sellers with pagination.
  */
 
-import { desc, eq } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { CheckCircle, Clock, ShoppingCart, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
 import { orderSellers, orders, sellerStores, users } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/money";
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage(props: { searchParams?: Promise<{ page?: string }> }) {
 	await requireAdmin();
+	const searchParams = await props.searchParams;
+	const currentPage = Number.parseInt(searchParams?.page || "1", 10);
+	const pageSize = 10;
+	const offset = (currentPage - 1) * pageSize;
 
-	const allSubOrders = await db
+	const [totalCountRes] = await db.select({ count: count() }).from(orderSellers);
+	const totalItems = Number(totalCountRes?.count ?? 0);
+	const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+	const pagedSubOrders = await db
 		.select({
 			subOrder: orderSellers,
 			masterOrder: orders,
@@ -27,7 +36,9 @@ export default async function AdminOrdersPage() {
 		.innerJoin(orders, eq(orderSellers.orderId, orders.id))
 		.innerJoin(sellerStores, eq(orderSellers.sellerStoreId, sellerStores.id))
 		.leftJoin(users, eq(orders.buyerId, users.id))
-		.orderBy(desc(orderSellers.createdAt));
+		.orderBy(desc(orderSellers.createdAt))
+		.limit(pageSize)
+		.offset(offset);
 
 	return (
 		<div className="space-y-6">
@@ -46,62 +57,73 @@ export default async function AdminOrdersPage() {
 						<ShoppingCart className="h-5 w-5 text-primary" />
 						Daftar Transaksi Sub-Order
 					</CardTitle>
-					<CardDescription>Total {allSubOrders.length} transaksi tercatat di sistem.</CardDescription>
+					<CardDescription>Total {totalItems} transaksi tercatat di sistem.</CardDescription>
 				</CardHeader>
-				<CardContent>
-					{allSubOrders.length === 0 ? (
+				<CardContent className="space-y-4">
+					{totalItems === 0 ? (
 						<div className="text-center py-12 text-muted-foreground text-sm space-y-2">
 							<ShoppingCart className="h-8 w-8 mx-auto opacity-50" />
 							<p>Belum ada transaksi pesanan tercatat di platform.</p>
 						</div>
 					) : (
-						<div className="overflow-x-auto">
-							<table className="w-full text-sm text-left">
-								<thead className="text-xs uppercase text-muted-foreground bg-muted/40 border-b border-border/40">
-									<tr>
-										<th className="px-4 py-3">ID Sub-Order</th>
-										<th className="px-4 py-3">Toko Penjual</th>
-										<th className="px-4 py-3">Pembeli</th>
-										<th className="px-4 py-3">Subtotal</th>
-										<th className="px-4 py-3">No. Resi</th>
-										<th className="px-4 py-3">Status</th>
-										<th className="px-4 py-3 text-right">Tanggal</th>
-									</tr>
-								</thead>
-								<tbody className="divide-y divide-border/40">
-									{allSubOrders.map(({ subOrder, sellerStore, buyer }) => (
-										<tr key={subOrder.id} className="hover:bg-muted/20">
-											<td className="px-4 py-3 font-mono text-xs font-semibold text-foreground">
-												#{subOrder.id.slice(0, 8)}
-											</td>
-											<td className="px-4 py-3 font-medium text-foreground">{sellerStore.name}</td>
-											<td className="px-4 py-3">
-												<div className="flex flex-col">
-													<span>{buyer?.name || "Pembeli"}</span>
-													<span className="text-xs text-muted-foreground font-mono">{buyer?.email}</span>
-												</div>
-											</td>
-											<td className="px-4 py-3 font-medium">
-												{formatMoney({
-													amount: subOrder.subtotal,
-													currency: "IDR",
-													locale: "id-ID",
-												})}
-											</td>
-											<td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-												{subOrder.trackingNumber || "-"}
-											</td>
-											<td className="px-4 py-3">
-												<StatusBadge status={subOrder.status} />
-											</td>
-											<td className="px-4 py-3 text-xs text-muted-foreground text-right">
-												{subOrder.createdAt ? new Date(subOrder.createdAt).toLocaleDateString("id-ID") : "-"}
-											</td>
+						<>
+							<div className="overflow-x-auto">
+								<table className="w-full text-sm text-left">
+									<thead className="text-xs uppercase text-muted-foreground bg-muted/40 border-b border-border/40">
+										<tr>
+											<th className="px-4 py-3">ID Sub-Order</th>
+											<th className="px-4 py-3">Toko Penjual</th>
+											<th className="px-4 py-3">Pembeli</th>
+											<th className="px-4 py-3">Subtotal</th>
+											<th className="px-4 py-3">No. Resi</th>
+											<th className="px-4 py-3">Status</th>
+											<th className="px-4 py-3 text-right">Tanggal</th>
 										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
+									</thead>
+									<tbody className="divide-y divide-border/40">
+										{pagedSubOrders.map(({ subOrder, sellerStore, buyer }) => (
+											<tr key={subOrder.id} className="hover:bg-muted/20">
+												<td className="px-4 py-3 font-mono text-xs font-semibold text-foreground">
+													#{subOrder.id.slice(0, 8)}
+												</td>
+												<td className="px-4 py-3 font-medium text-foreground">{sellerStore.name}</td>
+												<td className="px-4 py-3">
+													<div className="flex flex-col">
+														<span>{buyer?.name || "Pembeli"}</span>
+														<span className="text-xs text-muted-foreground font-mono">{buyer?.email}</span>
+													</div>
+												</td>
+												<td className="px-4 py-3 font-medium">
+													{formatMoney({
+														amount: subOrder.subtotal,
+														currency: "IDR",
+														locale: "id-ID",
+													})}
+												</td>
+												<td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+													{subOrder.trackingNumber || "-"}
+												</td>
+												<td className="px-4 py-3">
+													<StatusBadge status={subOrder.status} />
+												</td>
+												<td className="px-4 py-3 text-xs text-muted-foreground text-right">
+													{subOrder.createdAt
+														? new Date(subOrder.createdAt).toLocaleDateString("id-ID")
+														: "-"}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+
+							<DataTablePagination
+								currentPage={currentPage}
+								totalPages={totalPages}
+								totalItems={totalItems}
+								pageSize={pageSize}
+							/>
+						</>
 					)}
 				</CardContent>
 			</Card>

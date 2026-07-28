@@ -1,9 +1,9 @@
 /**
  * Buyer Server Actions — Ivet Mart
  *
- * Server-side actions for buyer account operations & checkout:
- * - Address management (create, delete, set default)
- * - Multi-vendor order creation & checkout
+ * Server-side actions for buyer account operations & checkout.
+ * Address actions return { success, message } for toast feedback.
+ * createOrderAction redirects → keeps void.
  */
 
 "use server";
@@ -16,10 +16,12 @@ import { db } from "@/lib/db";
 import { addresses, cartItems, orderItems, orderSellers, orders, products, variants } from "@/lib/db/schema";
 import { safe } from "@/lib/utils";
 
+type ActionResult = { success: boolean; message: string };
+
 /**
- * Add a new shipping address for buyer
+ * Add a new shipping address for buyer (stays on page → returns ActionResult)
  */
-export async function createAddressAction(formData: FormData): Promise<void> {
+export async function createAddressAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
 	const session = await requireAuth();
 	const userId = session.user.id;
 
@@ -33,16 +35,14 @@ export async function createAddressAction(formData: FormData): Promise<void> {
 	const isDefault = formData.get("isDefault") === "true";
 
 	if (!recipientName || !phone || !addressLine) {
-		throw new Error("Nama penerima, nomor telepon, dan alamat wajib diisi.");
+		return { success: false, message: "Nama penerima, nomor telepon, dan alamat wajib diisi." };
 	}
 
 	const [err] = await safe(
 		db.transaction(async (tx) => {
 			if (isDefault) {
-				// Remove previous default
 				await tx.update(addresses).set({ isDefault: false }).where(eq(addresses.userId, userId));
 			}
-
 			await tx.insert(addresses).values({
 				userId,
 				label,
@@ -58,22 +58,23 @@ export async function createAddressAction(formData: FormData): Promise<void> {
 	);
 
 	if (err) {
-		throw new Error("Gagal menyimpan alamat pengiriman.");
+		return { success: false, message: "Gagal menyimpan alamat pengiriman." };
 	}
 
 	revalidatePath("/account/addresses");
 	revalidatePath("/checkout");
+	return { success: true, message: "Alamat pengiriman berhasil ditambahkan!" };
 }
 
 /**
- * Delete a shipping address
+ * Delete a shipping address (stays on page → returns ActionResult)
  */
-export async function deleteAddressAction(formData: FormData): Promise<void> {
+export async function deleteAddressAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
 	const session = await requireAuth();
 	const addressId = formData.get("addressId") as string;
 
 	if (!addressId) {
-		throw new Error("ID Alamat wajib diisi.");
+		return { success: false, message: "ID Alamat wajib diisi." };
 	}
 
 	const [err] = await safe(
@@ -81,16 +82,16 @@ export async function deleteAddressAction(formData: FormData): Promise<void> {
 	);
 
 	if (err) {
-		throw new Error("Gagal menghapus alamat.");
+		return { success: false, message: "Gagal menghapus alamat." };
 	}
 
 	revalidatePath("/account/addresses");
 	revalidatePath("/checkout");
+	return { success: true, message: "Alamat berhasil dihapus." };
 }
 
 /**
- * Process Multi-Vendor Checkout
- * Groups items by seller store, creates master order + sub-orders per seller.
+ * Process Multi-Vendor Checkout (redirects → keeps void)
  */
 export async function createOrderAction(formData: FormData): Promise<void> {
 	const session = await requireAuth();
@@ -105,7 +106,6 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 		throw new Error("Keranjang belanja kosong.");
 	}
 
-	// Fetch cart items with product & seller info
 	const items = await db
 		.select({
 			cartItem: cartItems,
@@ -121,7 +121,6 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 		throw new Error("Keranjang belanja kosong.");
 	}
 
-	// Group items by sellerStoreId
 	const itemsBySeller = new Map<
 		string,
 		{ variant: typeof variants.$inferSelect; product: typeof products.$inferSelect; quantity: number }[]
@@ -134,17 +133,12 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 		if (!itemsBySeller.has(sellerId)) {
 			itemsBySeller.set(sellerId, []);
 		}
-		itemsBySeller.get(sellerId)?.push({
-			variant,
-			product,
-			quantity: cartItem.quantity,
-		});
+		itemsBySeller.get(sellerId)?.push({ variant, product, quantity: cartItem.quantity });
 		grandTotal += Number(variant.price) * cartItem.quantity;
 	});
 
 	let createdOrderId = "";
 
-	// Transaction to insert master order, sub-orders, order items, and clear cart
 	const [err] = await safe(
 		db.transaction(async (tx) => {
 			const [masterOrder] = await tx
@@ -166,7 +160,6 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 
 				const isUuidSeller = sellerStoreId !== "official-store" && sellerStoreId.includes("-");
 
-				// Insert sub-order per seller
 				const [subOrder] = await tx
 					.insert(orderSellers)
 					.values({
@@ -178,7 +171,6 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 					})
 					.returning();
 
-				// Insert line items for this sub-order
 				for (const item of sellerItems) {
 					await tx.insert(orderItems).values({
 						orderSellerId: subOrder.id,
@@ -191,7 +183,6 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 				}
 			}
 
-			// Clear user's cart
 			await tx.delete(cartItems).where(eq(cartItems.cartId, cartId));
 		}),
 	);

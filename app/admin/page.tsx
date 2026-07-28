@@ -2,6 +2,7 @@
  * Admin Overview Dashboard Page — Ivet Mart
  *
  * Summary metric cards, pending seller approval alerts, and recent platform activity.
+ * Uses ActionForm + SubmitButton for toast feedback & double-click prevention.
  */
 
 import {
@@ -16,8 +17,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { approveSellerAction, rejectSellerAction } from "@/app/admin/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { getAdminDashboardStats, getPendingSellers } from "@/lib/db/queries/admin";
 import { formatMoney } from "@/lib/money";
 
@@ -166,29 +169,29 @@ export default async function AdminDashboardPage() {
 											</td>
 											<td className="px-4 py-3 text-right">
 												<div className="flex items-center justify-end gap-2">
-													<form action={approveSellerAction}>
+													<ActionForm action={approveSellerAction}>
 														<input type="hidden" name="storeId" value={store.id} />
-														<Button
-															type="submit"
+														<SubmitButton
+															loadingText="..."
 															size="sm"
 															className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8"
 														>
 															<CheckCircle className="h-3.5 w-3.5 mr-1" />
 															Setujui
-														</Button>
-													</form>
-													<form action={rejectSellerAction}>
+														</SubmitButton>
+													</ActionForm>
+													<ActionForm action={rejectSellerAction}>
 														<input type="hidden" name="storeId" value={store.id} />
-														<Button
-															type="submit"
+														<SubmitButton
+															loadingText="..."
 															size="sm"
 															variant="outline"
 															className="text-destructive hover:bg-destructive/10 text-xs h-8"
 														>
 															<XCircle className="h-3.5 w-3.5 mr-1" />
 															Tolak
-														</Button>
-													</form>
+														</SubmitButton>
+													</ActionForm>
 												</div>
 											</td>
 										</tr>

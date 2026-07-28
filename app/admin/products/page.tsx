@@ -10,6 +10,7 @@ import { ExternalLink, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { adminDeleteProductAction, toggleProductActiveAction } from "@/app/admin/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,7 +138,7 @@ export default async function AdminProductsPage(props: { searchParams?: Promise<
 														</Link>
 													</Button>
 
-													<form action={toggleProductActiveAction}>
+													<ActionForm action={toggleProductActiveAction}>
 														<input type="hidden" name="productId" value={product.id} />
 														<input type="hidden" name="currentActive" value={String(product.active)} />
 														{product.active ? (
@@ -161,9 +162,9 @@ export default async function AdminProductsPage(props: { searchParams?: Promise<
 																Aktifkan
 															</SubmitButton>
 														)}
-													</form>
+													</ActionForm>
 
-													<form action={adminDeleteProductAction}>
+													<ActionForm action={adminDeleteProductAction}>
 														<input type="hidden" name="productId" value={product.id} />
 														<SubmitButton
 															size="sm"
@@ -173,7 +174,7 @@ export default async function AdminProductsPage(props: { searchParams?: Promise<
 														>
 															<Trash2 className="h-3.5 w-3.5" />
 														</SubmitButton>
-													</form>
+													</ActionForm>
 												</div>
 											</td>
 										</tr>

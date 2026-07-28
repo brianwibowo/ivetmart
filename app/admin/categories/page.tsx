@@ -2,10 +2,12 @@
  * Admin Categories Management Page — Ivet Mart
  *
  * Product category management page with inline form to create new categories.
+ * Uses ActionForm + SubmitButton for toast feedback.
  */
 
 import { FolderPlus, FolderTree } from "lucide-react";
 import { createCategoryAction } from "@/app/admin/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -91,7 +93,7 @@ export default async function AdminCategoriesPage() {
 						</CardTitle>
 						<CardDescription>Buat kategori baru untuk mengelompokkan katalog.</CardDescription>
 					</CardHeader>
-					<form action={createCategoryAction}>
+					<ActionForm action={createCategoryAction}>
 						<CardContent className="space-y-4">
 							<div className="space-y-2">
 								<Label htmlFor="cat-name">
@@ -115,7 +117,7 @@ export default async function AdminCategoriesPage() {
 								Simpan Kategori
 							</SubmitButton>
 						</CardContent>
-					</form>
+					</ActionForm>
 				</Card>
 			</div>
 		</div>

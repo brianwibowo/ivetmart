@@ -2,15 +2,17 @@
  * Seller Store Settings Page — Ivet Mart
  *
  * Form for sellers to update their store profile information.
+ * Uses ActionForm + SubmitButton for toast feedback.
  */
 
 import { Save, Store } from "lucide-react";
 import { redirect } from "next/navigation";
 import { updateStoreSettingsAction } from "@/app/seller/actions";
-import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireSeller } from "@/lib/auth-guard";
 import { getSellerStoreByUserId } from "@/lib/db/queries/seller";
@@ -42,7 +44,7 @@ export default async function SellerSettingsPage() {
 						Perubahan data akan langsung diperbarui di halaman publik toko Anda.
 					</CardDescription>
 				</CardHeader>
-				<form action={updateStoreSettingsAction}>
+				<ActionForm action={updateStoreSettingsAction}>
 					<CardContent className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="edit-store-name">
@@ -98,12 +100,12 @@ export default async function SellerSettingsPage() {
 						</div>
 					</CardContent>
 					<CardFooter className="flex justify-end pt-4 border-t border-border/40">
-						<Button type="submit">
+						<SubmitButton loadingText="Menyimpan...">
 							<Save className="h-4 w-4 mr-1.5" />
 							Simpan Perubahan
-						</Button>
+						</SubmitButton>
 					</CardFooter>
-				</form>
+				</ActionForm>
 			</Card>
 		</div>
 	);

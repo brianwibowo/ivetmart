@@ -12,7 +12,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 /** Routes that require authentication (any role) */
-const PROTECTED_PREFIXES = ["/account", "/seller", "/admin"];
+const PROTECTED_PREFIXES = ["/account", "/seller", "/admin", "/checkout"];
 
 /** Routes that should redirect if already authenticated */
 const AUTH_PAGES = ["/login", "/signup"];
@@ -40,5 +40,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-	matcher: ["/account/:path*", "/seller/:path*", "/admin/:path*", "/login", "/signup"],
+	matcher: ["/account/:path*", "/seller/:path*", "/admin/:path*", "/checkout", "/login", "/signup"],
 };

@@ -1,23 +1,39 @@
 /**
  * Admin Users Management Page — Ivet Mart
  *
- * User account table with search, role badges, and status toggle (active / suspended).
+ * User account table with search, role badges, status toggle, and pagination.
+ * Uses ActionForm + SubmitButton for toast feedback & double-click prevention.
  */
 
-import { desc } from "drizzle-orm";
+import { count, desc } from "drizzle-orm";
 import { Shield, UserCheck, UserX } from "lucide-react";
 import { toggleUserStatusAction } from "@/app/admin/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage(props: { searchParams?: Promise<{ page?: string }> }) {
 	await requireAdmin();
+	const searchParams = await props.searchParams;
+	const currentPage = Number.parseInt(searchParams?.page || "1", 10);
+	const pageSize = 10;
+	const offset = (currentPage - 1) * pageSize;
 
-	const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+	const [totalCountRes] = await db.select({ count: count() }).from(users);
+	const totalItems = Number(totalCountRes?.count ?? 0);
+	const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+	const pagedUsers = await db
+		.select()
+		.from(users)
+		.orderBy(desc(users.createdAt))
+		.limit(pageSize)
+		.offset(offset);
 
 	return (
 		<div className="space-y-6">
@@ -31,9 +47,9 @@ export default async function AdminUsersPage() {
 			<Card className="border-border/60">
 				<CardHeader>
 					<CardTitle className="text-lg">Katalog Akun Pengguna</CardTitle>
-					<CardDescription>Total {allUsers.length} pengguna terdaftar di database.</CardDescription>
+					<CardDescription>Total {totalItems} pengguna terdaftar di database.</CardDescription>
 				</CardHeader>
-				<CardContent>
+				<CardContent className="space-y-4">
 					<div className="overflow-x-auto">
 						<table className="w-full text-sm text-left">
 							<thead className="text-xs uppercase text-muted-foreground bg-muted/40 border-b border-border/40">
@@ -47,7 +63,7 @@ export default async function AdminUsersPage() {
 								</tr>
 							</thead>
 							<tbody className="divide-y divide-border/40">
-								{allUsers.map((user) => (
+								{pagedUsers.map((user) => (
 									<tr key={user.id} className="hover:bg-muted/20">
 										<td className="px-4 py-3 font-medium">
 											<div className="flex flex-col">
@@ -75,31 +91,31 @@ export default async function AdminUsersPage() {
 										</td>
 										<td className="px-4 py-3 text-right">
 											{user.role !== "admin" && (
-												<form action={toggleUserStatusAction}>
+												<ActionForm action={toggleUserStatusAction}>
 													<input type="hidden" name="userId" value={user.id} />
 													<input type="hidden" name="currentStatus" value={user.status} />
 													{user.status === "active" ? (
-														<Button
-															type="submit"
+														<SubmitButton
+															loadingText="..."
 															size="sm"
 															variant="ghost"
 															className="text-destructive hover:bg-destructive/10 text-xs h-8"
 														>
 															<UserX className="h-3.5 w-3.5 mr-1" />
 															Suspend
-														</Button>
+														</SubmitButton>
 													) : (
-														<Button
-															type="submit"
+														<SubmitButton
+															loadingText="..."
 															size="sm"
 															variant="ghost"
 															className="text-emerald-600 hover:bg-emerald-50 text-xs h-8"
 														>
 															<UserCheck className="h-3.5 w-3.5 mr-1" />
 															Aktifkan
-														</Button>
+														</SubmitButton>
 													)}
-												</form>
+												</ActionForm>
 											)}
 										</td>
 									</tr>
@@ -107,6 +123,13 @@ export default async function AdminUsersPage() {
 							</tbody>
 						</table>
 					</div>
+
+					<DataTablePagination
+						currentPage={currentPage}
+						totalPages={totalPages}
+						totalItems={totalItems}
+						pageSize={pageSize}
+					/>
 				</CardContent>
 			</Card>
 		</div>

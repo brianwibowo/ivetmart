@@ -3,11 +3,13 @@
  *
  * Incoming order list for the seller with inline form to update
  * shipping status and tracking numbers (resi).
+ * Uses ActionForm + SubmitButton for toast feedback.
  */
 
 import { CheckCircle, Clock, ShoppingBag, Truck } from "lucide-react";
 import { redirect } from "next/navigation";
 import { updateOrderShippingAction } from "@/app/seller/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,7 +89,7 @@ export default async function SellerOrdersPage() {
 									</div>
 
 									{/* Shipping Status Action Form */}
-									<form
+									<ActionForm
 										action={updateOrderShippingAction}
 										className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-border/40"
 									>
@@ -111,7 +113,7 @@ export default async function SellerOrdersPage() {
 										<SubmitButton loadingText="..." variant="secondary" className="h-9 text-xs">
 											Update Status
 										</SubmitButton>
-									</form>
+									</ActionForm>
 								</div>
 							))}
 						</div>

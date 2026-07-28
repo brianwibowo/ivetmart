@@ -2,12 +2,14 @@
  * Admin Add Product Page — Ivet Mart
  *
  * Form for platform admin to add products to any seller store or official store.
+ * Uses ActionForm + SubmitButton for toast feedback.
  */
 
 import { eq } from "drizzle-orm";
 import { ArrowLeft, PackagePlus } from "lucide-react";
 import Link from "next/link";
 import { adminCreateProductAction } from "@/app/admin/actions";
+import { ActionForm } from "@/components/ui/action-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,7 +53,7 @@ export default async function AdminNewProductPage() {
 					</CardTitle>
 					<CardDescription>Produk yang ditambahkan oleh Admin akan langsung terpublikasi.</CardDescription>
 				</CardHeader>
-				<form action={adminCreateProductAction}>
+				<ActionForm action={adminCreateProductAction}>
 					<CardContent className="space-y-4">
 						<div className="space-y-2">
 							<Label htmlFor="admin-prod-name">
@@ -150,7 +152,7 @@ export default async function AdminNewProductPage() {
 						</Button>
 						<SubmitButton loadingText="Menyimpan...">Simpan & Tambah Produk</SubmitButton>
 					</CardFooter>
-				</form>
+				</ActionForm>
 			</Card>
 		</div>
 	);

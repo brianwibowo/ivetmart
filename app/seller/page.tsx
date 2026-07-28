@@ -116,7 +116,13 @@ export default async function SellerDashboardPage() {
 				</CardHeader>
 				<CardContent>
 					{recentOrders.length === 0 ? (
-						<div className="text-center py-8 text-muted-foreground text-sm">Belum ada pesanan masuk.</div>
+						<div className="text-center py-10 text-muted-foreground text-sm space-y-2">
+							<ShoppingCart className="h-8 w-8 mx-auto opacity-40 text-primary" />
+							<p className="font-semibold text-foreground">Belum ada pesanan masuk</p>
+							<p className="text-xs text-muted-foreground max-w-xs mx-auto">
+								Pesanan yang dibeli oleh pelanggan toko Anda akan otomatis ditampilkan di sini.
+							</p>
+						</div>
 					) : (
 						<div className="overflow-x-auto">
 							<table className="w-full text-sm text-left">

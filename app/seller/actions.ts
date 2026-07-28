@@ -1,11 +1,9 @@
 /**
  * Seller Server Actions — Ivet Mart
  *
- * Server-side actions for seller onboarding and store management:
- * - Register seller store
- * - Update store profile
- * - Create / Update / Delete products
- * - Update order shipping status & tracking number
+ * Server-side actions for seller onboarding and store management.
+ * Actions that stay on page return { success, message } for toast feedback.
+ * Actions that redirect (registerStore, createProduct) keep void return + redirect().
  */
 
 "use server";
@@ -19,8 +17,10 @@ import { getSellerStoreByUserId } from "@/lib/db/queries/seller";
 import { orderSellers, products, sellerStores, variants } from "@/lib/db/schema";
 import { safe } from "@/lib/utils";
 
+type ActionResult = { success: boolean; message: string };
+
 /**
- * Register a new seller store
+ * Register a new seller store (redirects → keeps void)
  */
 export async function registerSellerStoreAction(formData: FormData): Promise<void> {
 	const session = await requireAuth();
@@ -38,14 +38,13 @@ export async function registerSellerStoreAction(formData: FormData): Promise<voi
 		throw new Error("Nama toko minimal 3 karakter.");
 	}
 
-	// Generate clean URL slug from store name
 	const baseSlug = name
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, "-")
 		.replace(/^-|-$/g, "");
 	const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
-	const [err, newStore] = await safe(
+	const [err] = await safe(
 		db
 			.insert(sellerStores)
 			.values({
@@ -63,7 +62,7 @@ export async function registerSellerStoreAction(formData: FormData): Promise<voi
 			.returning(),
 	);
 
-	if (err || !newStore?.length) {
+	if (err) {
 		throw new Error("Gagal mendaftarkan toko. Silakan coba lagi.");
 	}
 
@@ -72,14 +71,17 @@ export async function registerSellerStoreAction(formData: FormData): Promise<voi
 }
 
 /**
- * Update store settings
+ * Update store settings (stays on page → returns ActionResult)
  */
-export async function updateStoreSettingsAction(formData: FormData): Promise<void> {
+export async function updateStoreSettingsAction(
+	_prev: ActionResult,
+	formData: FormData,
+): Promise<ActionResult> {
 	const session = await requireSeller();
 	const store = await getSellerStoreByUserId(session.user.id);
 
 	if (!store) {
-		throw new Error("Toko tidak ditemukan.");
+		return { success: false, message: "Toko tidak ditemukan." };
 	}
 
 	const name = formData.get("name") as string;
@@ -90,33 +92,26 @@ export async function updateStoreSettingsAction(formData: FormData): Promise<voi
 	const phone = (formData.get("phone") as string) || null;
 
 	if (!name || name.trim().length < 3) {
-		throw new Error("Nama toko minimal 3 karakter.");
+		return { success: false, message: "Nama toko minimal 3 karakter." };
 	}
 
 	const [err] = await safe(
 		db
 			.update(sellerStores)
-			.set({
-				name,
-				description,
-				address,
-				city,
-				province,
-				phone,
-				updatedAt: new Date(),
-			})
+			.set({ name, description, address, city, province, phone, updatedAt: new Date() })
 			.where(eq(sellerStores.id, store.id)),
 	);
 
 	if (err) {
-		throw new Error("Gagal memperbarui toko.");
+		return { success: false, message: "Gagal memperbarui toko." };
 	}
 
 	revalidatePath("/seller/settings");
+	return { success: true, message: "Pengaturan toko berhasil disimpan!" };
 }
 
 /**
- * Create a new product for seller store
+ * Create a new product for seller store (redirects → keeps void)
  */
 export async function createProductAction(formData: FormData): Promise<void> {
 	const session = await requireSeller();
@@ -140,11 +135,9 @@ export async function createProductAction(formData: FormData): Promise<void> {
 
 	const price = Number.parseInt(priceStr, 10);
 	const stock = Number.parseInt(stockStr || "0", 10);
-
 	const productId = `p-${Date.now()}`;
 	const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString().slice(-4)}`;
 
-	// Insert Product & Default Variant in transaction
 	const [err] = await safe(
 		db.transaction(async (tx) => {
 			await tx.insert(products).values({
@@ -158,7 +151,6 @@ export async function createProductAction(formData: FormData): Promise<void> {
 				images: [imageUrl],
 				active: true,
 			});
-
 			await tx.insert(variants).values({
 				id: `v-${productId}-1`,
 				productId,
@@ -180,14 +172,17 @@ export async function createProductAction(formData: FormData): Promise<void> {
 }
 
 /**
- * Update order tracking number and status
+ * Update order tracking number and status (stays on page → returns ActionResult)
  */
-export async function updateOrderShippingAction(formData: FormData): Promise<void> {
+export async function updateOrderShippingAction(
+	_prev: ActionResult,
+	formData: FormData,
+): Promise<ActionResult> {
 	const session = await requireSeller();
 	const store = await getSellerStoreByUserId(session.user.id);
 
 	if (!store) {
-		throw new Error("Toko tidak ditemukan.");
+		return { success: false, message: "Toko tidak ditemukan." };
 	}
 
 	const subOrderId = formData.get("subOrderId") as string;
@@ -195,23 +190,20 @@ export async function updateOrderShippingAction(formData: FormData): Promise<voi
 	const status = formData.get("status") as "processing" | "shipped" | "delivered" | "completed";
 
 	if (!subOrderId || !status) {
-		throw new Error("ID Pesanan dan Status wajib diisi.");
+		return { success: false, message: "ID Pesanan dan Status wajib diisi." };
 	}
 
 	const [err] = await safe(
 		db
 			.update(orderSellers)
-			.set({
-				trackingNumber,
-				status,
-				updatedAt: new Date(),
-			})
+			.set({ trackingNumber, status, updatedAt: new Date() })
 			.where(and(eq(orderSellers.id, subOrderId), eq(orderSellers.sellerStoreId, store.id))),
 	);
 
 	if (err) {
-		throw new Error("Gagal memperbarui status pesanan.");
+		return { success: false, message: "Gagal memperbarui status pesanan." };
 	}
 
 	revalidatePath("/seller/orders");
+	return { success: true, message: "Status pesanan & resi berhasil diperbarui!" };
 }
