@@ -52,39 +52,78 @@ export function LoginForm() {
 	};
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Masuk</CardTitle>
-				<CardDescription>Masukkan email dan password untuk masuk ke akun Anda.</CardDescription>
+		<Card className="rounded-3xl border-border/80 bg-white/95 p-2 shadow-xl backdrop-blur-md">
+			<CardHeader className="space-y-1 text-center pb-4">
+				<CardTitle className="text-2xl font-bold tracking-tight text-foreground">
+					Selamat Datang Kembali
+				</CardTitle>
+				<CardDescription className="text-sm text-muted-foreground">
+					Masukkan email dan kata sandi Anda untuk mengakses akun.
+				</CardDescription>
 			</CardHeader>
 			<form onSubmit={handleSubmit}>
-				<CardContent className="flex flex-col gap-4">
+				<CardContent className="space-y-4 pt-2">
 					{error && (
-						<div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>
+						<div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-3.5 text-sm text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+							<span>⚠️</span>
+							<span>{error}</span>
+						</div>
 					)}
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="login-email">Email</Label>
-						<Input id="login-email" name="email" type="email" placeholder="email@example.com" required />
+					<div className="space-y-1.5">
+						<Label
+							htmlFor="login-email"
+							className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+						>
+							Email
+						</Label>
+						<Input
+							id="login-email"
+							name="email"
+							type="email"
+							placeholder="nama@email.com"
+							required
+							className="h-11 rounded-xl border-border/80 bg-secondary/30 px-3.5 focus-visible:bg-white focus-visible:ring-[#80070A]/30"
+						/>
 					</div>
-					<div className="flex flex-col gap-2">
-						<Label htmlFor="login-password">Password</Label>
+					<div className="space-y-1.5">
+						<div className="flex items-center justify-between">
+							<Label
+								htmlFor="login-password"
+								className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+							>
+								Kata Sandi
+							</Label>
+						</div>
 						<Input
 							id="login-password"
 							name="password"
 							type="password"
+							placeholder="••••••••"
 							required
 							autoComplete="current-password"
+							className="h-11 rounded-xl border-border/80 bg-secondary/30 px-3.5 focus-visible:bg-white focus-visible:ring-[#80070A]/30"
 						/>
 					</div>
 				</CardContent>
-				<CardFooter className="flex flex-col gap-4">
-					<Button type="submit" className="w-full" disabled={pending}>
-						{pending ? "Masuk..." : "Masuk"}
+				<CardFooter className="flex flex-col gap-4 pt-4">
+					<Button
+						type="submit"
+						className="h-11 w-full rounded-xl bg-[#80070A] text-white font-semibold shadow-md transition-all hover:bg-[#600507] hover:shadow-lg disabled:opacity-50"
+						disabled={pending}
+					>
+						{pending ? (
+							<span className="flex items-center gap-2">
+								<span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+								Memproses...
+							</span>
+						) : (
+							"Masuk ke Akun"
+						)}
 					</Button>
 					<p className="text-center text-sm text-muted-foreground">
-						Belum punya akun?{" "}
-						<Link href="/signup" className="text-primary underline-offset-4 hover:underline">
-							Daftar
+						Belum memiliki akun?{" "}
+						<Link href="/signup" className="font-semibold text-[#80070A] underline-offset-4 hover:underline">
+							Daftar Sekarang
 						</Link>
 					</p>
 				</CardFooter>

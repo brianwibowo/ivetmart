@@ -13,6 +13,7 @@
  * Run: `bun run db:seed`
  */
 
+import { auth } from "@/lib/auth-server";
 import { db } from "@/lib/db";
 import {
 	categories,
@@ -82,6 +83,40 @@ async function seed() {
 			},
 		])
 		.onConflictDoNothing();
+
+	// Seed better-auth users
+	try {
+		await auth.api.signUpEmail({
+			body: {
+				email: "admin@ivetmart.com",
+				password: "admin123",
+				name: "Admin Ivet Mart",
+				role: "admin",
+			},
+		});
+	} catch {}
+
+	try {
+		await auth.api.signUpEmail({
+			body: {
+				email: "seller@ivetmart.com",
+				password: "seller123",
+				name: "Toko Semarang Jaya",
+				role: "seller",
+			},
+		});
+	} catch {}
+
+	try {
+		await auth.api.signUpEmail({
+			body: {
+				email: "buyer@ivetmart.com",
+				password: "buyer123",
+				name: "Budi Santoso",
+				role: "buyer",
+			},
+		});
+	} catch {}
 
 	// 2. Seller Store (verified)
 	console.log("🏪 Seeding seller store...");
