@@ -30,9 +30,11 @@ type CategoryFilterParams = {
 };
 
 const EMPTY_FACETS = {
+	categories: [],
+	tags: [],
+	price: { min: "0", max: "0" },
 	priceBounds: { min: 0, max: 0 },
 	variantTypes: [],
-	categories: [],
 	collections: [],
 	brands: [],
 } satisfies Awaited<ReturnType<typeof commerce.productFilters>>;

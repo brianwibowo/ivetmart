@@ -1,178 +1,147 @@
-import { CheckCircle } from "lucide-react";
-import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { YnsLink } from "@/components/yns-link";
-import { commerce } from "@/lib/commerce";
-import { CURRENCY, LOCALE } from "@/lib/constants";
-import { formatMoney } from "@/lib/money";
-import { getProductThumbnail } from "@/lib/utils";
-import { YNSMedia } from "@/lib/yns-media";
+/**
+ * Order Success & Payment Instructions Page — Ivet Mart
+ *
+ * Confirms order placement and displays BCA transfer details (0961166321)
+ * with instructions to upload proof of transfer or track order.
+ */
 
-export const metadata: Metadata = {
-	title: "Order Confirmed",
-	robots: { index: false, follow: false },
-};
+import { eq } from "drizzle-orm";
+import { ArrowRight, CheckCircle2, CreditCard, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/lib/db";
+import { orderSellers, orders, sellerStores } from "@/lib/db/schema";
+import { formatMoney } from "@/lib/money";
 
 export default async function OrderSuccessPage(props: { params: Promise<{ id: string }> }) {
-	"use cache";
-	cacheLife("seconds");
+	const { id } = await props.params;
 
-	return <OrderDetails params={props.params} />;
-}
+	const [masterOrder] = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
 
-const OrderDetails = async ({ params }: { params: Promise<{ id: string }> }) => {
-	const { id } = await params;
-	const order = await commerce.orderGet({ id });
-
-	if (!order) {
+	if (!masterOrder) {
 		notFound();
 	}
 
-	const lineItems = order.orderData.lineItems;
-	const shippingAddress = order.orderData.shippingAddress;
-	const shipping = order.orderData.shipping;
-	const customer = order.orderData.customer;
-
-	const subtotal = lineItems.reduce((acc: bigint, item: any) => {
-		return acc + BigInt(item.productVariant.price) * BigInt(item.quantity);
-	}, BigInt(0));
-
-	const shippingCost = shipping ? BigInt(shipping.price) : BigInt(0);
-	const total = subtotal + shippingCost;
+	const subOrders = await db
+		.select({
+			subOrder: orderSellers,
+			sellerStore: sellerStores,
+		})
+		.from(orderSellers)
+		.leftJoin(sellerStores, eq(orderSellers.sellerStoreId, sellerStores.id))
+		.where(eq(orderSellers.orderId, masterOrder.id));
 
 	return (
-		<div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-			{/* Success Header */}
-			<div className="text-center mb-10">
-				<div className="flex justify-center mb-4">
-					<div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-						<CheckCircle className="h-8 w-8 text-green-600" />
-					</div>
+		<div className="max-w-2xl mx-auto py-10 px-4 space-y-8 text-center">
+			{/* Success Animation Banner */}
+			<div className="space-y-3">
+				<div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 animate-bounce">
+					<CheckCircle2 className="h-10 w-10" />
 				</div>
-				<h1 className="text-3xl font-semibold tracking-tight">Thank you for your order!</h1>
-				<p className="text-muted-foreground mt-2">Order #{order.lookup} has been confirmed</p>
-				{customer?.email && (
-					<p className="text-sm text-muted-foreground mt-1">
-						A confirmation email will be sent to {customer.email}
-					</p>
-				)}
-			</div>
-
-			{/* Order Items */}
-			<div className="border border-border rounded-lg overflow-hidden">
-				<div className="bg-secondary/50 px-6 py-4 border-b border-border">
-					<h2 className="font-medium">Order Items</h2>
-				</div>
-				<div className="divide-y divide-border">
-					{lineItems.map((item: any) => (
-						<OrderItem key={item.id} item={item} />
-					))}
-				</div>
-
-				{/* Order Summary */}
-				<div className="bg-secondary/30 px-6 py-4 space-y-2">
-					<div className="flex items-center justify-between text-sm">
-						<span className="text-muted-foreground">Subtotal</span>
-						<span>{formatMoney({ amount: subtotal, currency: CURRENCY, locale: LOCALE })}</span>
-					</div>
-					{shipping && (
-						<div className="flex items-center justify-between text-sm">
-							<span className="text-muted-foreground">Shipping ({shipping.name})</span>
-							<span>{formatMoney({ amount: shippingCost, currency: CURRENCY, locale: LOCALE })}</span>
-						</div>
-					)}
-					<div className="flex items-center justify-between font-semibold pt-2 border-t border-border">
-						<span>Total</span>
-						<span>{formatMoney({ amount: total, currency: CURRENCY, locale: LOCALE })}</span>
-					</div>
-				</div>
-			</div>
-
-			{/* Shipping Address */}
-			{shippingAddress && (
-				<div className="border border-border rounded-lg overflow-hidden mt-6">
-					<div className="bg-secondary/50 px-6 py-4 border-b border-border">
-						<h2 className="font-medium">Shipping Address</h2>
-					</div>
-					<div className="px-6 py-4 text-sm text-muted-foreground">
-						{shippingAddress.name && <p className="text-foreground font-medium">{shippingAddress.name}</p>}
-						{shippingAddress.line1 && <p>{shippingAddress.line1}</p>}
-						{shippingAddress.line2 && <p>{shippingAddress.line2}</p>}
-						<p>
-							{[shippingAddress.city, shippingAddress.state, shippingAddress.postalCode]
-								.filter(Boolean)
-								.join(", ")}
-						</p>
-						{shippingAddress.country && <p>{shippingAddress.country}</p>}
-					</div>
-				</div>
-			)}
-
-			{/* Continue Shopping Button */}
-			<div className="mt-8 text-center">
-				<Button asChild>
-					<YnsLink prefetch="eager" href="/">
-						Continue Shopping
-					</YnsLink>
-				</Button>
-			</div>
-		</div>
-	);
-};
-
-type OrderLineItem = {
-	id: string;
-	quantity: number;
-	productVariant: {
-		id: string;
-		price: string;
-		images: string[];
-		product: {
-			id: string;
-			name: string;
-			slug: string;
-			images: string[];
-		};
-	};
-};
-
-function OrderItem({ item }: { item: any }) {
-	const { productVariant, quantity } = item;
-	const { product } = productVariant;
-
-	const image = getProductThumbnail(productVariant.images) ?? getProductThumbnail(product.images);
-	const price = BigInt(productVariant.price);
-	const lineTotal = price * BigInt(quantity);
-
-	return (
-		<div className="flex gap-4 p-6">
-			{/* Product Image */}
-			<YnsLink
-				prefetch="eager"
-				href={`/product/${product.slug}`}
-				className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary"
-			>
-				{image && <YNSMedia src={image} alt={product.name} fill className="object-cover" sizes="80px" />}
-			</YnsLink>
-
-			{/* Product Details */}
-			<div className="flex min-w-0 flex-1 flex-col justify-between">
-				<div>
-					<YnsLink
-						prefetch="eager"
-						href={`/product/${product.slug}`}
-						className="text-sm font-medium leading-tight text-foreground hover:underline line-clamp-2"
-					>
-						{product.name}
-					</YnsLink>
-					<p className="text-sm text-muted-foreground mt-1">Qty: {quantity}</p>
-				</div>
-				<p className="text-sm font-semibold">
-					{formatMoney({ amount: lineTotal, currency: CURRENCY, locale: LOCALE })}
+				<h1 className="text-3xl font-bold tracking-tight text-foreground font-serif">
+					Pesanan Berhasil Dibuat!
+				</h1>
+				<p className="text-sm text-muted-foreground max-w-md mx-auto">
+					Terima kasih telah berbelanja di Ivet Mart. Nomor pesanan Anda adalah{" "}
+					<strong className="text-foreground font-mono">#{masterOrder.id.slice(0, 8)}</strong>
 				</p>
 			</div>
+
+			{/* BCA Payment Transfer Card */}
+			<Card className="border-2 border-primary/30 bg-gradient-to-b from-card to-primary/5 text-left">
+				<CardHeader className="pb-3">
+					<div className="flex items-center justify-between">
+						<CardTitle className="text-base flex items-center gap-2">
+							<CreditCard className="h-5 w-5 text-primary" />
+							Instruksi Pembayaran Transfer Bank
+						</CardTitle>
+						<Badge variant="secondary" className="bg-amber-100 text-amber-900 border-amber-300">
+							Menunggu Transfer
+						</Badge>
+					</div>
+					<CardDescription className="text-xs">
+						Silakan lakukan transfer sesuai nominal tagihan ke rekening BCA resmi Ivet Mart berikut:
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<div className="p-4 rounded-xl bg-background border border-border/60 space-y-2">
+						<div className="flex justify-between items-center text-xs text-muted-foreground">
+							<span>Bank Tujuan:</span>
+							<strong className="text-foreground">Bank BCA (Bank Central Asia)</strong>
+						</div>
+						<div className="flex justify-between items-center text-xs text-muted-foreground">
+							<span>Nomor Rekening:</span>
+							<span className="text-xl font-bold text-primary font-mono select-all">0961166321</span>
+						</div>
+						<div className="flex justify-between items-center text-xs text-muted-foreground">
+							<span>Atas Nama:</span>
+							<strong className="text-foreground">Ivet Mart Marketplace</strong>
+						</div>
+						<div className="pt-2 border-t border-border/40 flex justify-between items-center text-sm font-bold">
+							<span>Jumlah Transfer Pas:</span>
+							<span className="text-primary text-base font-mono">
+								{formatMoney({
+									amount: masterOrder.totalAmount,
+									currency: "IDR",
+									locale: "id-ID",
+								})}
+							</span>
+						</div>
+					</div>
+
+					<div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
+						💡 <strong>Tips Pembayaran:</strong> Masukkan nomor pesanan{" "}
+						<code className="font-mono bg-background px-1 py-0.5 rounded">#{masterOrder.id.slice(0, 8)}</code>{" "}
+						di berita transfer Anda agar verifikasi pesanan diproses lebih cepat oleh penjual.
+					</div>
+				</CardContent>
+			</Card>
+
+			{/* Sub-Orders Breakdown */}
+			<Card className="border-border/60 text-left">
+				<CardHeader className="pb-3">
+					<CardTitle className="text-base flex items-center gap-2">
+						<ShoppingBag className="h-5 w-5 text-primary" />
+						Sub-Order Diteruskan ke Penjual ({subOrders.length} Toko)
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-3 text-xs">
+					{subOrders.map(({ subOrder, sellerStore }) => (
+						<div
+							key={subOrder.id}
+							className="p-3 rounded-lg bg-muted/40 border border-border/40 flex justify-between items-center"
+						>
+							<div>
+								<span className="font-semibold text-foreground block">
+									Toko: {sellerStore?.name || "Official Store"}
+								</span>
+								<span className="text-muted-foreground font-mono">Sub-Order #{subOrder.id.slice(0, 8)}</span>
+							</div>
+							<span className="font-semibold text-foreground">
+								{formatMoney({
+									amount: subOrder.subtotal,
+									currency: "IDR",
+									locale: "id-ID",
+								})}
+							</span>
+						</div>
+					))}
+				</CardContent>
+				<CardFooter className="flex flex-col sm:flex-row justify-between gap-3 pt-3 border-t border-border/40">
+					<Button asChild variant="outline" className="w-full sm:w-auto">
+						<Link href="/products">Lanjut Belanja</Link>
+					</Button>
+					<Button asChild className="w-full sm:w-auto">
+						<Link href="/account/orders">
+							Pantau Pesanan di Akun
+							<ArrowRight className="h-4 w-4 ml-1.5" />
+						</Link>
+					</Button>
+				</CardFooter>
+			</Card>
 		</div>
 	);
 }

@@ -1,53 +1,44 @@
+/**
+ * Proxy — Ivet Mart (Next.js 16 convention, replaces middleware.ts)
+ *
+ * Handles:
+ * 1. Route protection — redirect unauthenticated users from protected routes
+ * 2. Auth page redirect — redirect logged-in users away from login/signup
+ *
+ * Role-based access is enforced server-side in layouts (via auth-guard.ts).
+ */
+
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { AUTH_ENABLED } from "./lib/auth-config";
-import { getSubdomainPublicUrl } from "./lib/commerce";
 
-// /account is auth-only: when auth is off it is neither protected nor proxied.
-const protectedRoutes = AUTH_ENABLED ? ["/account"] : [];
-const proxiedRoutes = AUTH_ENABLED ? ["/checkout", "/api/feed/", "/account"] : ["/checkout", "/api/feed/"];
+/** Routes that require authentication (any role) */
+const PROTECTED_PREFIXES = ["/account", "/seller", "/admin"];
+
+/** Routes that should redirect if already authenticated */
+const AUTH_PAGES = ["/login", "/signup"];
 
 export async function proxy(request: NextRequest) {
-	// Auth: redirect unauthenticated users away from protected routes
-	const isProtected = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route));
-	if (isProtected) {
-		const sessionCookie = request.cookies.get("better-auth.session_token");
-		if (!sessionCookie) {
-			const loginUrl = new URL("/login", request.url);
-			loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
-			return NextResponse.redirect(loginUrl);
-		}
+	const { pathname } = request.nextUrl;
+	const sessionToken = request.cookies.get("better-auth.session_token");
+	const isLoggedIn = Boolean(sessionToken);
+
+	// ─── Redirect logged-in users away from auth pages ────
+	const isAuthPage = AUTH_PAGES.some((page) => pathname.startsWith(page));
+	if (isAuthPage && isLoggedIn) {
+		return NextResponse.redirect(new URL("/", request.url));
 	}
 
-	// Checkout & feed proxy: rewrite to the backend
-	if (proxiedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))) {
-		const { subdomain, publicUrl } = await getSubdomainPublicUrl();
-		const destinationUrl = new URL(publicUrl);
-
-		const requestHeaders = new Headers(request.headers);
-		requestHeaders.set("x-forwarded-host", destinationUrl.host);
-		requestHeaders.set("origin", destinationUrl.toString());
-
-		const url = new URL(`/${subdomain}${request.nextUrl.pathname}${request.nextUrl.search}`, destinationUrl);
-		url.searchParams.set("auth", "0");
-
-		return NextResponse.rewrite(url, {
-			request: {
-				headers: requestHeaders,
-			},
-		});
+	// ─── Redirect unauthenticated users to login ──────────
+	const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+	if (isProtected && !isLoggedIn) {
+		const loginUrl = new URL("/login", request.url);
+		loginUrl.searchParams.set("callbackUrl", pathname);
+		return NextResponse.redirect(loginUrl);
 	}
 
 	return NextResponse.next();
 }
 
 export const config = {
-	matcher: [
-		"/checkout/:path*",
-		"/api/feed/gmc",
-		"/api/feed/meta",
-		"/api/feed/openai",
-		"/account",
-		"/account/:path*",
-	],
+	matcher: ["/account/:path*", "/seller/:path*", "/admin/:path*", "/login", "/signup"],
 };

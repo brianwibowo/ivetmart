@@ -1,5 +1,19 @@
-// Self-Hosted Data Access Layer for Ivet Mart
-// Replaces Commerce Kit SDK with local database provider (0 external API key dependencies)
+// Database-Backed Data Access Layer for Ivet Mart
+// Queries PostgreSQL via Drizzle ORM — 0 external API key dependencies
+
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { getActiveProducts, getProductByIdOrSlug } from "@/lib/db/queries/buyer";
+import {
+	cartItems,
+	carts,
+	categories,
+	collections,
+	products,
+	reviews,
+	users,
+	variants,
+} from "@/lib/db/schema";
 
 export type LocalVariant = {
 	id: string;
@@ -15,20 +29,42 @@ export type LocalVariant = {
 	omnibusPrice?: string;
 };
 
+export type LocalProductCategory = {
+	id: string;
+	name: string;
+	slug: string;
+};
+
+export type LocalProductSeller = {
+	id: string;
+	name: string;
+	slug: string;
+	logoUrl?: string | null;
+};
+
+export type VolumeTier = {
+	id: string;
+	price: string;
+	minQuantity: number;
+	maxQuantity: number | null;
+	productVariantId: string;
+};
+
 export type LocalProduct = {
 	id: string;
 	name: string;
 	slug: string;
 	description: string;
 	summary?: string;
-	content?: any;
+	content?: Record<string, unknown> | null;
 	categoryId: string;
-	category?: { id: string; name: string; slug: string } | any;
+	category?: LocalProductCategory;
+	seller?: LocalProductSeller;
 	images: string[];
 	active: boolean;
 	variants: LocalVariant[];
-	volumePricingTiers?: any[];
-	updatedAt?: string;
+	volumePricingTiers?: VolumeTier[];
+	updatedAt: string;
 	seo?: { title?: string; description?: string; canonical?: string };
 };
 
@@ -74,254 +110,36 @@ export type LocalCartItem = {
 	variantId: string;
 	quantity: number;
 	variant: LocalVariant;
-	productVariant?: LocalVariant;
+	productVariant: {
+		id: string;
+		price: string;
+		images: string[];
+		product: {
+			id: string;
+			name: string;
+			slug: string;
+			images: string[];
+		};
+	};
 	product: LocalProduct;
 };
 
 export type LocalCart = {
 	id: string;
 	items: LocalCartItem[];
+	lineItems: LocalCartItem[];
 	totalAmount: string;
 };
 
-const CATEGORIES: LocalCategory[] = [
-	{
-		id: "cat-kuliner",
-		name: "Kuliner Khas Semarang",
-		slug: "kuliner-semarang",
-		description: "Makanan dan oleh-oleh otentik khas Kota Semarang",
-		active: true,
-	},
-	{
-		id: "cat-fashion",
-		name: "Fashion & Batik",
-		slug: "fashion-batik",
-		description: "Kain batik Semarangan dan produk kerajinan fashion etnik",
-		active: true,
-	},
-	{
-		id: "cat-merch",
-		name: "Merchandise UNISVET",
-		slug: "merchandise-unisvet",
-		description: "Produk dan aksesoris resmi edisi Universitas Ivet Semarang",
-		active: true,
-	},
-];
-
-const COLLECTIONS: LocalCollection[] = [
-	{
-		id: "col-relax",
-		name: "Relax",
-		slug: "relax",
-		description: "Everything you need to slow down and relax.",
-	},
-	{
-		id: "col-lifestyle",
-		name: "Lifestyle",
-		slug: "lifestyle",
-		description: "Crafted lifestyle products for daily living.",
-	},
-];
-
-const PRODUCTS: LocalProduct[] = [
-	{
-		id: "p-lumpia",
-		name: "Lumpia Semarang Rebung Original",
-		slug: "lumpia-semarang",
-		description:
-			"Lumpia Semarang khas dengan isian rebung segar, daging ayam, dan telur gurih. Disajikan hangat lengkap dengan saus tauco khas dan kucai segar.",
-		summary: "Lumpia Semarang rebung khas dengan saus tauco gurih.",
-		categoryId: "cat-kuliner",
-		images: ["/products/lumpia-semarang.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-lumpia-1",
-				productId: "p-lumpia",
-				name: "Kemasan Isi 5 Pcs",
-				price: "45000",
-				stock: 50,
-				images: ["/products/lumpia-semarang.png"],
-				attributes: { porsi: "Isi 5 Pcs" },
-			},
-		],
-	},
-	{
-		id: "p-batik",
-		name: "Kemeja Batik Semarangan Motif Sekar Jagad",
-		slug: "batik-semarangan",
-		description:
-			"Kemeja batik pria berkualitas tinggi dengan motif Sekar Jagad berornamen khas warna Merah Maroon & Emas UNISVET.",
-		summary: "Kemeja batik khas Semarang motif Sekar Jagad warna Maroon & Emas.",
-		categoryId: "cat-fashion",
-		images: ["/products/batik-semarang.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-batik-m",
-				productId: "p-batik",
-				name: "Ukuran M",
-				price: "185000",
-				stock: 20,
-				images: ["/products/batik-semarang.png"],
-				attributes: { ukuran: "M" },
-			},
-			{
-				id: "v-batik-l",
-				productId: "p-batik",
-				name: "Ukuran L",
-				price: "185000",
-				stock: 25,
-				images: ["/products/batik-semarang.png"],
-				attributes: { ukuran: "L" },
-			},
-		],
-	},
-	{
-		id: "p-bandeng",
-		name: "Bandeng Presto Juwana Premium",
-		slug: "bandeng-presto",
-		description:
-			"Bandeng presto duri lunak olahan khas Juwana Semarang. Daging lembut gurih dilengkapi sambal terasi spesial.",
-		summary: "Bandeng presto duri lunak khas Juwana Semarang.",
-		categoryId: "cat-kuliner",
-		images: ["/products/bandeng-presto.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-bandeng-1",
-				productId: "p-bandeng",
-				name: "Kotak 2 Ekor",
-				price: "65000",
-				stock: 40,
-				images: ["/products/bandeng-presto.png"],
-				attributes: { kemasan: "Box 2 Ekor" },
-			},
-		],
-	},
-	{
-		id: "p-tumbler",
-		name: "Tumbler & Mug Eksklusif UNISVET",
-		slug: "tumbler-unisvet",
-		description:
-			"Set tumbler stainless steel dan mug keramik edisi spesial Universitas Ivet Semarang berwarna Maroon & Emas.",
-		summary: "Set tumbler & mug keramik official UNISVET.",
-		categoryId: "cat-merch",
-		images: ["/products/tumbler-unisvet.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-tumbler-1",
-				productId: "p-tumbler",
-				name: "Set Maroon Emas",
-				price: "120000",
-				stock: 100,
-				images: ["/products/tumbler-unisvet.png"],
-				attributes: { warna: "Maroon & Emas" },
-			},
-		],
-	},
-	{
-		id: "p-polo",
-		name: "Kaos Polo Civitas UNISVET",
-		slug: "polo-unisvet",
-		description:
-			"Kaos polo bahan cotton lacoste premium dengan bordir logo Universitas Ivet Semarang. Nyaman untuk aktivitas harian.",
-		summary: "Kaos polo katun lacoste official Universitas Ivet Semarang.",
-		categoryId: "cat-merch",
-		images: ["/products/polo-unisvet.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-polo-m",
-				productId: "p-polo",
-				name: "Ukuran M",
-				price: "110000",
-				stock: 45,
-				images: ["/products/polo-unisvet.png"],
-				attributes: { ukuran: "M" },
-			},
-			{
-				id: "v-polo-l",
-				productId: "p-polo",
-				name: "Ukuran L",
-				price: "110000",
-				stock: 50,
-				images: ["/products/polo-unisvet.png"],
-				attributes: { ukuran: "L" },
-			},
-		],
-	},
-	{
-		id: "p-wingko",
-		name: "Wingko Babat Semarang Cap Kereta Api",
-		slug: "wingko-babat",
-		description:
-			"Kue tradisional khas Semarang dengan perpaduan gurihnya kelapa sangrai muda dan ketan manis harum bakar.",
-		summary: "Wingko babat kelapa muda legit khas Semarang.",
-		categoryId: "cat-kuliner",
-		images: ["/products/wingko-babat.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-wingko-1",
-				productId: "p-wingko",
-				name: "Box Isi 10 Pcs",
-				price: "38000",
-				stock: 60,
-				images: ["/products/wingko-babat.png"],
-				attributes: { isi: "10 Pcs" },
-			},
-		],
-	},
-	{
-		id: "p-tahu",
-		name: "Tahu Bakso Semarang Spesial Daging Sapi",
-		slug: "tahu-bakso",
-		description:
-			"Tahu goreng berkualitas berisikan olahan daging sapi cincang padat dan gurih khas Semarang.",
-		summary: "Tahu bakso daging sapi cincang gurih khas Semarang.",
-		categoryId: "cat-kuliner",
-		images: ["/products/tahu-bakso.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-tahu-1",
-				productId: "p-tahu",
-				name: "Box Isi 10 Pcs",
-				price: "42000",
-				stock: 35,
-				images: ["/products/tahu-bakso.png"],
-				attributes: { isi: "10 Pcs" },
-			},
-		],
-	},
-	{
-		id: "p-tastenun",
-		name: "Tas Laptop Tenun Etnik Semarang",
-		slug: "tas-tenun",
-		description:
-			"Tas laptop buatan perajin lokal Semarang dari kombinasi kain tenun etnik dan kulit sintetis premium.",
-		summary: "Tas laptop tenun etnik buatan perajin Semarang.",
-		categoryId: "cat-fashion",
-		images: ["/products/tas-tenun.png"],
-		active: true,
-		variants: [
-			{
-				id: "v-tastenun-1",
-				productId: "p-tastenun",
-				name: "Standard 14-15 Inch",
-				price: "215000",
-				stock: 15,
-				images: ["/products/tas-tenun.png"],
-				attributes: { ukuran: "14-15 Inch" },
-			},
-		],
-	},
-];
-
-// In-memory cart store for local session/dev
-const LOCAL_CARTS: Record<string, { variantId: string; quantity: number }[]> = {};
+export type NewsletterPopupSettings = {
+	delaySeconds?: number;
+	heading?: string;
+	subheading?: string;
+	ctaText?: string;
+	teaserText?: string;
+	imageUrl?: string;
+	discountCode?: string;
+};
 
 export const STORE_INFO = {
 	store: {
@@ -343,7 +161,7 @@ export const STORE_INFO = {
 				reviews: true,
 				cookieConsent: false,
 			},
-			newsletterPopup: null as any,
+			newsletterPopup: null as NewsletterPopupSettings | null,
 			announcementBar: "Selamat Datang di Ivet Mart — Pusat Produk Khas Semarang & Merchandise Resmi UNISVET",
 		},
 	},
@@ -352,6 +170,7 @@ export const STORE_INFO = {
 
 export const commerce = {
 	meGet: async () => STORE_INFO,
+
 	productBrowse: async (options?: {
 		active?: boolean;
 		limit?: number;
@@ -368,95 +187,162 @@ export const commerce = {
 		orderBy?: string;
 		orderDirection?: string;
 	}) => {
-		let list = PRODUCTS.filter((p) => p.active);
-		if (options?.category) {
-			const catObj = CATEGORIES.find((c) => c.id === options.category || c.slug === options.category);
-			const targetCatId = catObj ? catObj.id : options.category;
-			const categoryFiltered = list.filter((p) => p.categoryId === targetCatId);
-			if (categoryFiltered.length > 0) {
-				list = categoryFiltered;
-			}
-		}
 		const searchKeyword = options?.query || options?.search;
-		if (searchKeyword) {
-			const q = searchKeyword.toLowerCase();
-			list = list.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
-		}
-		if (options?.limit) {
-			list = list.slice(0, options.limit);
-		}
-		const enrichedList = list.map((p) => {
-			const cat = CATEGORIES.find((c) => c.id === p.categoryId || c.slug === p.categoryId);
-			return {
-				...p,
-				updatedAt: (p as any).updatedAt ?? new Date().toISOString(),
-				category: cat ? { id: cat.id, name: cat.name, slug: cat.slug } : undefined,
-			};
+		const list = await getActiveProducts({
+			limit: options?.limit,
+			offset: options?.offset,
+			search: searchKeyword,
+			category: options?.category,
+			collection: options?.collection,
 		});
+
+		const enrichedList = list.map((p) => ({
+			...p,
+			description: p.description ?? "",
+			summary: p.summary ?? undefined,
+			categoryId: p.categoryId ?? "",
+			updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : new Date().toISOString(),
+		}));
+
 		return {
-			data: enrichedList,
+			data: enrichedList as LocalProduct[],
 			meta: { total: enrichedList.length, count: enrichedList.length, pagesCount: 1 },
 		};
 	},
+
 	productGet: async ({ idOrSlug }: { idOrSlug: string }) => {
-		const product = PRODUCTS.find((p) => p.id === idOrSlug || p.slug === idOrSlug);
+		const product = await getProductByIdOrSlug(idOrSlug);
 		if (!product) return null;
-		const cat = CATEGORIES.find((c) => c.id === product.categoryId || c.slug === product.categoryId);
+
 		return {
 			...product,
-			updatedAt: (product as any).updatedAt ?? new Date().toISOString(),
-			category: cat ? { id: cat.id, name: cat.name, slug: cat.slug } : undefined,
-		};
+			description: product.description ?? "",
+			summary: product.summary ?? undefined,
+			categoryId: product.categoryId ?? "",
+			updatedAt: product.updatedAt ? new Date(product.updatedAt).toISOString() : new Date().toISOString(),
+		} as LocalProduct;
 	},
-	productFilters: async (): Promise<{
-		categories: { id: string; name: string; slug: string }[];
-		tags?: string[];
-		price?: { min: string; max: string };
-		priceBounds: { min: number; max: number };
-		variantTypes: any[];
-		collections: any[];
-		brands: any[];
-	}> => {
+
+	productFilters: async () => {
+		const dbCats = await db.select().from(categories);
 		return {
-			categories: CATEGORIES.map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
+			categories: dbCats.map((c) => ({ id: c.id, name: c.name, slug: c.slug })),
 			tags: ["Semarang", "UNISVET", "Kuliner", "Batik", "Merchandise"],
 			price: { min: "38000", max: "215000" },
 			priceBounds: { min: 38000, max: 215000 },
 			variantTypes: [],
-			collections: COLLECTIONS,
+			collections: [],
 			brands: [],
 		};
 	},
+
 	productReviewsBrowse: async ({ idOrSlug }: { idOrSlug: string }, _options?: { limit?: number }) => {
+		const product = await getProductByIdOrSlug(idOrSlug);
+		if (!product) {
+			return {
+				data: [],
+				summary: { averageRating: 5, totalCount: 0, reviewCount: 0 },
+				meta: { averageRating: 5, totalCount: 0, count: 0, offset: 0, limit: 20 },
+			};
+		}
+
+		const dbReviews = await db
+			.select({
+				review: reviews,
+				user: users,
+			})
+			.from(reviews)
+			.leftJoin(users, eq(reviews.userId, users.id))
+			.where(eq(reviews.productId, product.id));
+
+		const formattedReviews = dbReviews.map(({ review, user }) => ({
+			id: review.id,
+			author: user?.name ?? "Pembeli",
+			content: review.comment ?? "",
+			rating: review.rating,
+			createdAt: review.createdAt ? new Date(review.createdAt).toISOString() : new Date().toISOString(),
+		}));
+
+		const avg = formattedReviews.length
+			? formattedReviews.reduce((sum, r) => sum + r.rating, 0) / formattedReviews.length
+			: 5;
+
 		return {
-			data: [],
-			summary: { averageRating: 5, totalCount: 0, reviewCount: 0 },
-			meta: { averageRating: 5, totalCount: 0, count: 0, offset: 0, limit: 20 },
+			data: formattedReviews,
+			summary: {
+				averageRating: avg,
+				totalCount: formattedReviews.length,
+				reviewCount: formattedReviews.length,
+			},
+			meta: {
+				averageRating: avg,
+				totalCount: formattedReviews.length,
+				count: formattedReviews.length,
+				offset: 0,
+				limit: 20,
+			},
 		};
 	},
-	productReviewCreate: async (_arg1?: any, _arg2?: any) => {
+
+	productReviewCreate: async (_arg1?: unknown, _arg2?: unknown) => {
 		return { success: true };
 	},
+
 	categoriesBrowse: async (options?: { active?: boolean; limit?: number }) => {
-		let list = CATEGORIES;
-		if (options?.limit) list = list.slice(0, options.limit);
-		return { data: list };
+		let query = db.select().from(categories);
+		if (options?.limit) {
+			query = query.limit(options.limit) as typeof query;
+		}
+		const list = await query;
+		return {
+			data: list.map((c) => ({
+				...c,
+				description: c.description ?? "",
+				parentId: null as string | null,
+				active: c.active ?? true,
+				image: c.image ?? undefined,
+				seo: { title: c.name, description: c.description ?? "", canonical: `/category/${c.slug}` },
+			})),
+		};
 	},
+
 	categoryGet: async ({ idOrSlug }: { idOrSlug: string }) => {
-		const category = CATEGORIES.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
-		return category ?? null;
+		const rows = await db.select().from(categories).where(eq(categories.id, idOrSlug));
+		const cat = rows.length
+			? rows[0]
+			: (await db.select().from(categories).where(eq(categories.slug, idOrSlug)))[0];
+
+		if (!cat) return null;
+
+		return {
+			...cat,
+			description: cat.description ?? "",
+			seo: { title: cat.name, description: cat.description ?? "", canonical: `/category/${cat.slug}` },
+		};
 	},
+
 	collectionBrowse: async (options?: { active?: boolean; limit?: number }) => {
-		let list = COLLECTIONS;
-		if (options?.limit) list = list.slice(0, options.limit);
-		return { data: list };
+		let query = db.select().from(collections);
+		if (options?.limit) {
+			query = query.limit(options.limit) as typeof query;
+		}
+		const list = await query;
+		return {
+			data: list.map((c) => ({
+				...c,
+				description: c.description ?? "",
+				active: c.active ?? true,
+			})),
+		};
 	},
+
 	collectionGet: async ({ idOrSlug }: { idOrSlug: string }) => {
-		const collection = COLLECTIONS.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
-		if (!collection) return null;
-		const productCollections = PRODUCTS.map((product) => ({ product }));
-		return { ...collection, productCollections };
+		const rows = await db.select().from(collections).where(eq(collections.id, idOrSlug));
+		const col = rows[0];
+		if (!col) return null;
+		return { ...col, description: col.description ?? "", productCollections: [] };
 	},
+
 	legalPageBrowse: async () => {
 		return {
 			data: [
@@ -475,6 +361,7 @@ export const commerce = {
 			],
 		};
 	},
+
 	legalPageGet: async (slug: string) => {
 		const label = slug === "terms" ? "Syarat & Ketentuan" : "Kebijakan Privasi";
 		return {
@@ -485,64 +372,111 @@ export const commerce = {
 			contentHtml: `<p>Selamat datang di Ivet Mart Universitas Ivet Semarang. Platform belanja resmi Civitas UNISVET.</p>`,
 		};
 	},
+
 	postBrowse: async (_options?: { active?: boolean; limit?: number }) => {
 		return { data: [] as LocalPost[] };
 	},
-	postGet: async (_params: { idOrSlug: string }): Promise<LocalPost | null> => {
+
+	postGet: async (_params?: { idOrSlug: string }): Promise<LocalPost | null> => {
 		return null;
 	},
+
 	search: async ({ query, limit = 6 }: { query: string; limit?: number }) => {
-		const q = query.toLowerCase();
-		const products = PRODUCTS.filter(
-			(p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
-		).slice(0, limit);
-		const categories = CATEGORIES.filter((c) => c.name.toLowerCase().includes(q)).slice(0, limit);
-		const items = products.map((p) => ({
+		const productsList = await getActiveProducts({ search: query, limit });
+		const dbCats = await db.select().from(categories);
+		const matchedCats = dbCats
+			.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()))
+			.slice(0, limit);
+
+		const items = productsList.map((p) => ({
 			id: p.id,
 			name: p.name,
 			slug: p.slug,
-			image: p.images[0] ?? null,
-			summary: p.summary ?? p.description,
+			image: (p.images as string[])?.[0] ?? null,
+			summary: p.summary ?? p.description ?? "",
 			type: "product" as const,
 		}));
+
 		return {
-			products,
-			categories,
+			products: productsList,
+			categories: matchedCats,
 			collections: [],
 			items,
 		};
 	},
-	cartGet: async ({ cartId }: { cartId?: string }): Promise<any> => {
-		if (!cartId || !LOCAL_CARTS[cartId]) {
-			return null;
-		}
-		const items = LOCAL_CARTS[cartId]
-			.map(({ variantId, quantity }) => {
-				const product = PRODUCTS.find((p) => p.variants.some((v) => v.id === variantId));
-				const variant = product?.variants.find((v) => v.id === variantId);
-				if (!product || !variant) return null;
-				return {
-					id: `item-${variantId}`,
-					variantId,
-					quantity,
-					variant,
-					productVariant: variant,
-					product,
-				};
-			})
-			.filter((item: any): item is LocalCartItem => item !== null);
 
-		const totalAmount = items
-			.reduce((sum: number, item: any) => sum + Number(item.variant.price) * item.quantity, 0)
+	cartGet: async ({ cartId }: { cartId?: string }): Promise<LocalCart | null> => {
+		if (!cartId) return null;
+
+		const cartRow = await db.select().from(carts).where(eq(carts.id, cartId)).limit(1);
+		if (!cartRow.length) return null;
+
+		const items = await db
+			.select({
+				cartItem: cartItems,
+				variant: variants,
+				product: products,
+			})
+			.from(cartItems)
+			.innerJoin(variants, eq(cartItems.variantId, variants.id))
+			.innerJoin(products, eq(variants.productId, products.id))
+			.where(eq(cartItems.cartId, cartId));
+
+		const formattedItems: LocalCartItem[] = items.map(({ cartItem, variant, product }) => {
+			const itemVariant: LocalVariant = {
+				id: variant.id,
+				productId: product.id,
+				name: variant.name ?? "",
+				price: String(variant.price),
+				stock: variant.stock ?? 0,
+				images: (variant.images as string[]) ?? [],
+				attributes: (variant.attributes as Record<string, string>) ?? {},
+			};
+
+			const itemProduct: LocalProduct = {
+				id: product.id,
+				name: product.name,
+				slug: product.slug,
+				description: product.description ?? "",
+				images: (product.images as string[]) ?? [],
+				active: product.active ?? true,
+				categoryId: product.categoryId ?? "",
+				updatedAt: product.updatedAt ? new Date(product.updatedAt).toISOString() : new Date().toISOString(),
+				variants: [],
+			};
+
+			return {
+				id: `item-${variant.id}`,
+				variantId: variant.id,
+				quantity: cartItem.quantity,
+				variant: itemVariant,
+				productVariant: {
+					id: variant.id,
+					price: String(variant.price),
+					images: (variant.images as string[]) ?? [],
+					product: {
+						id: product.id,
+						name: product.name,
+						slug: product.slug,
+						images: (product.images as string[]) ?? [],
+					},
+				},
+				product: itemProduct,
+			};
+		});
+
+		const totalAmount = formattedItems
+			.reduce((sum, item) => sum + Number(item.variant.price) * item.quantity, 0)
 			.toString();
 
 		return {
 			id: cartId,
-			items,
-			lineItems: items,
+			items: formattedItems,
+			lineItems: formattedItems,
 			totalAmount,
 		};
 	},
+
 	cartUpsert: async ({
 		cartId,
 		variantId,
@@ -555,35 +489,50 @@ export const commerce = {
 		mode?: "set";
 	}) => {
 		const id = cartId || `cart-${Date.now()}`;
-		if (!LOCAL_CARTS[id]) {
-			LOCAL_CARTS[id] = [];
+
+		// Ensure cart exists
+		const existingCart = await db.select().from(carts).where(eq(carts.id, id)).limit(1);
+		if (!existingCart.length) {
+			await db.insert(carts).values({ id }).onConflictDoNothing();
 		}
-		const existingIndex = LOCAL_CARTS[id].findIndex((i) => i.variantId === variantId);
+
+		const existingItem = await db
+			.select()
+			.from(cartItems)
+			.where(eq(cartItems.cartId, id))
+			.then((rows) => rows.find((r) => r.variantId === variantId));
+
 		if (quantity <= 0) {
-			if (existingIndex !== -1) {
-				LOCAL_CARTS[id].splice(existingIndex, 1);
+			if (existingItem) {
+				await db.delete(cartItems).where(eq(cartItems.id, existingItem.id));
 			}
-		} else if (existingIndex !== -1) {
-			if (mode === "set") {
-				LOCAL_CARTS[id][existingIndex].quantity = quantity;
-			} else {
-				LOCAL_CARTS[id][existingIndex].quantity += quantity;
-			}
+		} else if (existingItem) {
+			const newQty = mode === "set" ? quantity : existingItem.quantity + quantity;
+			await db.update(cartItems).set({ quantity: newQty }).where(eq(cartItems.id, existingItem.id));
 		} else {
-			LOCAL_CARTS[id].push({ variantId, quantity });
+			await db.insert(cartItems).values({
+				cartId: id,
+				variantId,
+				quantity,
+			});
 		}
+
 		return commerce.cartGet({ cartId: id });
 	},
-	contactMessageCreate: async (_data: Record<string, unknown>) => {
+
+	contactMessageCreate: async (_data?: Record<string, unknown>) => {
 		return { success: true };
 	},
-	newsletterSubscribe: async (_data: Record<string, unknown>) => {
+
+	newsletterSubscribe: async (_data?: Record<string, unknown>) => {
 		return { success: true };
 	},
-	subscriberCreate: async (_data: { email: string }) => {
+
+	subscriberCreate: async (_data?: { email: string }) => {
 		return { success: true };
 	},
-	orderGet: async (_params: { id: string }) => {
+
+	orderGet: async (_params?: { id: string }) => {
 		return null as any;
 	},
 };

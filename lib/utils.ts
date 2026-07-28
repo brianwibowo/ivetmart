@@ -18,3 +18,19 @@ export function isVideoUrl(url: string): boolean {
 export const getProductThumbnail = (urls: string[]): string | undefined => {
 	return urls.find((url) => !isVideoUrl(url));
 };
+
+/**
+ * Safe error handling utility for promises.
+ * Returns tuple [error, result].
+ *
+ * @example
+ * const [err, data] = await safe(db.select().from(users));
+ */
+export async function safe<T>(promise: Promise<T>): Promise<[Error, null] | [null, T]> {
+	try {
+		const data = await promise;
+		return [null, data];
+	} catch (err) {
+		return [err instanceof Error ? err : new Error(String(err)), null];
+	}
+}
