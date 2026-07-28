@@ -38,14 +38,16 @@ export function AuthButton() {
 	// ─── LOGGED OUT STATE ─────────────────────────────────
 	if (!session) {
 		return (
-			<div className="flex items-center gap-1.5">
-				<Button variant="ghost" size="sm" asChild className="font-medium text-xs sm:text-sm">
-					<Link href="/login">Masuk</Link>
-				</Button>
-				<Button size="sm" asChild className="font-medium text-xs sm:text-sm hidden sm:inline-flex">
-					<Link href="/signup">Daftar</Link>
-				</Button>
-			</div>
+			<Button
+				variant="outline"
+				size="sm"
+				asChild
+				className="font-semibold text-xs sm:text-sm border-[#80070A]/40 text-[#80070A] hover:bg-[#80070A]/10"
+			>
+				<Link href="/login" target="_blank" rel="noopener noreferrer">
+					Masuk
+				</Link>
+			</Button>
 		);
 	}
 

@@ -3,6 +3,7 @@ import "@/app/globals.css";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { Fraunces, Inter } from "next/font/google";
+import Image from "next/image";
 import { Suspense } from "react";
 import { CartProvider } from "@/app/cart/cart-context";
 import { CartSidebar } from "@/app/cart/cart-sidebar";
@@ -143,9 +144,17 @@ async function CartProviderWrapper({ children }: { children: React.ReactNode }) 
 								<YnsLink
 									prefetch={"eager"}
 									href="/"
-									className="yns-display text-xl font-bold tracking-tight text-[#80070A] font-serif"
+									className="flex items-center gap-2.5 yns-display text-xl font-bold tracking-tight text-[#80070A] font-serif"
 								>
-									Ivet Mart
+									<Image
+										src="/logo.png"
+										alt="Ivet Mart Logo"
+										width={36}
+										height={36}
+										className="h-9 w-auto object-contain shrink-0"
+										priority
+									/>
+									<span>Ivet Mart</span>
 								</YnsLink>
 								<Navbar links={links} />
 							</div>
@@ -153,7 +162,11 @@ async function CartProviderWrapper({ children }: { children: React.ReactNode }) 
 								<Suspense>
 									<SearchInput />
 								</Suspense>
-								{AUTH_ENABLED && <AuthButton />}
+								{AUTH_ENABLED && (
+									<Suspense fallback={null}>
+										<AuthButton />
+									</Suspense>
+								)}
 								<CartButton />
 							</div>
 						</div>
