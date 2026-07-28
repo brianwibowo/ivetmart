@@ -1,16 +1,18 @@
 import { commerce, getCanonicalUrl, meGetCached } from "@/lib/commerce";
 
+export const dynamic = "force-dynamic";
+
 const FEATURED_PRODUCTS = 30;
 const FEATURED_COLLECTIONS = 15;
 const FEATURED_POSTS = 20;
 
 export async function GET() {
 	const baseUrl = getCanonicalUrl();
-	const me = await meGetCached();
-	const storeName = me.store.name || "Ivet Mart";
-	const storeDescription = me.store.settings?.storeDescription || "An e-commerce store.";
-	const blogEnabled = me.store.settings?.enabledTools?.blog ?? false;
-	const contactFormEnabled = me.store.settings?.enabledTools?.contactForm ?? false;
+	const me = await meGetCached().catch(() => null);
+	const storeName = me?.store?.name || "Ivet Mart";
+	const storeDescription = me?.store?.settings?.storeDescription || "An e-commerce store.";
+	const blogEnabled = me?.store?.settings?.enabledTools?.blog ?? false;
+	const contactFormEnabled = me?.store?.settings?.enabledTools?.contactForm ?? false;
 
 	const [products, collections, legalPages, posts] = await Promise.all([
 		commerce
