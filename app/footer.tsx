@@ -52,7 +52,12 @@ async function FooterCollections() {
 	"use cache";
 	cacheLife("hours");
 
-	const collections = await commerce.collectionBrowse({ limit: 5 });
+	let collections: Awaited<ReturnType<typeof commerce.collectionBrowse>> = { data: [] };
+	try {
+		collections = await commerce.collectionBrowse({ limit: 5 });
+	} catch {
+		return null;
+	}
 
 	if (collections.data.length === 0) {
 		return null;
@@ -82,7 +87,12 @@ async function FooterLegalPages() {
 	"use cache";
 	cacheLife("hours");
 
-	const pages = await commerce.legalPageBrowse();
+	let pages: Awaited<ReturnType<typeof commerce.legalPageBrowse>> = { data: [] };
+	try {
+		pages = await commerce.legalPageBrowse();
+	} catch {
+		return null;
+	}
 
 	if (pages.data.length === 0) {
 		return null;

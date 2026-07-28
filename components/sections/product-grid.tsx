@@ -30,7 +30,15 @@ export async function ProductGrid({
 	"use cache";
 	cacheLife("minutes");
 
-	const displayProducts = products ?? (await commerce.productBrowse({ active: true, limit })).data;
+	let displayProducts: any[] = products ?? [];
+	if (!products) {
+		try {
+			const result = await commerce.productBrowse({ active: true, limit });
+			displayProducts = result.data;
+		} catch {
+			displayProducts = [];
+		}
+	}
 
 	return (
 		<section id="products" className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 pt-20 sm:pt-28">

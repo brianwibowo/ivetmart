@@ -9,13 +9,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@/lib/db/schema";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-	throw new Error(
-		"DATABASE_URL is not set. Add it to .env.local (e.g. postgresql://user:pass@localhost:5432/ivetmart)",
-	);
-}
+const connectionString = process.env.DATABASE_URL || "postgres://build:build@localhost:5432/build";
 
 /**
  * Raw postgres client — use `db` (Drizzle wrapper) instead of this directly.

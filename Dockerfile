@@ -15,7 +15,7 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN bun run build
+RUN bun run next build --experimental-build-mode compile
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
