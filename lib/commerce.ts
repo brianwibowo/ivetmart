@@ -542,7 +542,7 @@ export const meGetCached = async () => {
 	return STORE_INFO;
 };
 
-export function getStoreFaviconUrl(settings: typeof STORE_INFO.store.settings) {
+export function getStoreFaviconUrl(settings?: typeof STORE_INFO.store.settings | null) {
 	return settings?.favicon?.imageUrl ?? "/logo.png";
 }
 

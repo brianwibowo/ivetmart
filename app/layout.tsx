@@ -40,13 +40,16 @@ const fraunces = Fraunces({
 async function getStoreMetadata(): Promise<Metadata> {
 	"use cache";
 	cacheLife("hours");
-	const me = await meGetCached();
-	const storeName = me.store.name || "Ivet Mart";
-	const storeDescription = me.store.settings?.storeDescription || "Your next e-commerce store";
-	const faviconUrl = getStoreFaviconUrl(me.store.settings) ?? "/logo.svg";
+	const me = await meGetCached().catch(() => null);
+	const storeName = me?.store?.name || "Ivet Mart";
+	const storeDescription =
+		me?.store?.settings?.storeDescription || "Pusat Produk Khas Semarang & Merchandise Resmi UNISVET";
+	const faviconUrl = getStoreFaviconUrl(me?.store?.settings) ?? "/logo.png";
 	const storeLogo =
-		typeof me.store.settings?.logo === "string" ? me.store.settings.logo : me.store.settings?.logo?.imageUrl;
-	const ogImage = me.store.settings?.ogimage || storeLogo || "/logo.svg";
+		typeof me?.store?.settings?.logo === "string"
+			? me.store.settings.logo
+			: me?.store?.settings?.logo?.imageUrl;
+	const ogImage = me?.store?.settings?.ogimage || storeLogo || "/logo.png";
 
 	return {
 		title: {
@@ -95,8 +98,6 @@ async function getStoreMetadata(): Promise<Metadata> {
 
 export async function generateMetadata(): Promise<Metadata> {
 	const metadata = await getStoreMetadata();
-	// URL instances can't cross the "use cache" serialization boundary, so
-	// metadataBase is attached outside the cached scope (env-only, no IO).
 	return { ...metadata, metadataBase: new URL(getCanonicalUrl()) };
 }
 
@@ -115,14 +116,15 @@ async function getNavLinks(): Promise<NavLink[]> {
 	"use cache";
 	cacheLife("hours");
 	const [collections, me] = await Promise.all([
-		commerce.collectionBrowse({ limit: 5 }),
+		commerce.collectionBrowse({ limit: 5 }).catch(() => ({ data: [] })),
 		meGetCached().catch(() => null),
 	]);
-	const blogEnabled = me?.store.settings?.enabledTools?.blog ?? false;
+	const blogEnabled = me?.store?.settings?.enabledTools?.blog ?? false;
+	const collectionList = collections?.data ?? [];
 	return [
 		{ href: "/", label: "Beranda" },
 		{ href: "/products", label: "Semua Produk" },
-		...collections.data.map((collection) => ({
+		...collectionList.map((collection) => ({
 			href: `/collection/${collection.slug}`,
 			label: collection.name,
 		})),
@@ -191,8 +193,8 @@ async function getHtmlLang(): Promise<string> {
 }
 
 async function NewsletterPopupSection() {
-	const me = await meGetCached();
-	if (!me.store.settings?.enabledTools?.newsletterPopup) {
+	const me = await meGetCached().catch(() => null);
+	if (!me?.store?.settings?.enabledTools?.newsletterPopup) {
 		return null;
 	}
 	return <NewsletterDialog settings={me.store.settings?.newsletterPopup} />;
