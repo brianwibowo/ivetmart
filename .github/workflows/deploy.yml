@@ -54,15 +54,31 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+            # 1. Pastikan Docker Network ada
+            docker network create ivetmart-net || true
+
+            # 2. Buat file /root/ivetmart.env HANYA JIKA BELUM ADA (1x setup saja)
+            if [ ! -f /root/ivetmart.env ]; then
+              printf "NODE_ENV=production\nPORT=3000\nHOSTNAME=0.0.0.0\nDATABASE_URL=postgresql://postgres:ivetmart_db_password_2026@ivetmart-db:5432/ivetmart\nBETTER_AUTH_SECRET=ivetmart_secret_key_change_me_32chars\nBETTER_AUTH_URL=https://techno-ivetmart.id\nNEXT_PUBLIC_URL=https://techno-ivetmart.id\nYNS_API_KEY=test_key\n" > /root/ivetmart.env
+            fi
+
+            # 3. Pull image web terbaru & restart container web
             docker pull ghcr.io/${{ github.repository }}:latest
             docker stop ivetmart-web || true
             docker rm ivetmart-web || true
+
             docker run -d \
               --name ivetmart-web \
               --restart always \
+              --network ivetmart-net \
               -p 8095:3000 \
-              -e NODE_ENV=production \
-              -e PORT=3000 \
-              -e HOSTNAME=0.0.0.0 \
+              --env-file /root/ivetmart.env \
               ghcr.io/${{ github.repository }}:latest
+
+            # 4. Sinkronisasi skema DB baru jika ada perubahan tabel (Aman untuk data prod)
+            sleep 5
+            docker exec ivetmart-web bun run db:push || true
+
+            # Clean up docker images gantung
             docker system prune -f
