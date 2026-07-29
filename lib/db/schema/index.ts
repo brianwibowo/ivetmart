@@ -6,6 +6,7 @@
  */
 
 export * from "./addresses";
+export * from "./auth";
 export * from "./carts";
 export * from "./categories";
 export * from "./collections";

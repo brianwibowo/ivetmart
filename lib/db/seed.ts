@@ -118,25 +118,41 @@ async function seed() {
 		});
 	} catch {}
 
-	// 2. Seller Store (verified)
-	console.log("🏪 Seeding seller store...");
+	// 2. Seller Stores (verified)
+	console.log("🏪 Seeding seller stores...");
 	await db
 		.insert(sellerStores)
-		.values({
-			id: "00000000-0000-0000-0000-000000000010",
-			userId: "00000000-0000-0000-0000-000000000002",
-			name: "Toko Semarang Jaya",
-			slug: "semarang-jaya",
-			description:
-				"Toko oleh-oleh dan kerajinan khas Semarang. Menyediakan produk berkualitas untuk civitas UNISVET.",
-			address: "Jl. Pawiyatan Luhur IV No. 1, Bendan Duwur",
-			city: "Semarang",
-			province: "Jawa Tengah",
-			postalCode: "50234",
-			phone: "081234567891",
-			status: "active",
-			verifiedAt: new Date(),
-		})
+		.values([
+			{
+				id: "00000000-0000-0000-0000-000000000010",
+				userId: "00000000-0000-0000-0000-000000000002",
+				name: "Toko Semarang Jaya",
+				slug: "semarang-jaya",
+				description:
+					"Toko oleh-oleh dan kerajinan khas Semarang. Menyediakan produk berkualitas untuk civitas UNISVET.",
+				address: "Jl. Pawiyatan Luhur IV No. 1, Bendan Duwur",
+				city: "Semarang",
+				province: "Jawa Tengah",
+				postalCode: "50234",
+				phone: "081234567891",
+				status: "active",
+				verifiedAt: new Date(),
+			},
+			{
+				id: "00000000-0000-0000-0000-000000000099",
+				userId: "00000000-0000-0000-0000-000000000001",
+				name: "Ivet Mart Official Store",
+				slug: "ivet-mart-official",
+				description: "Toko Resmi Universitas Ivet Semarang — Merchandise Eksklusif & Produk Khas",
+				address: "Jl. Pawiyatan Luhur IV No. 1, Semarang",
+				city: "Semarang",
+				province: "Jawa Tengah",
+				postalCode: "50234",
+				phone: "081234567890",
+				status: "active",
+				verifiedAt: new Date(),
+			},
+		])
 		.onConflictDoNothing();
 
 	// 3. Categories
