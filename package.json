@@ -10,7 +10,7 @@
 		"lint": "bun run biome check --write --unsafe",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:push": "drizzle-kit push",
+		"db:push": "drizzle-kit push --force",
 		"db:seed": "bun run lib/db/seed.ts",
 		"db:studio": "drizzle-kit studio"
 	},

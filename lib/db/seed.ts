@@ -85,6 +85,7 @@ async function seed() {
 		.onConflictDoNothing();
 
 	// Seed better-auth users
+	console.log("🔑 Seeding better-auth accounts...");
 	try {
 		await auth.api.signUpEmail({
 			body: {
@@ -93,8 +94,12 @@ async function seed() {
 				name: "Admin Ivet Mart",
 				role: "admin",
 			},
+			headers: new Headers(),
 		});
-	} catch {}
+		console.log("   ✓ Admin account created");
+	} catch (e: any) {
+		console.log("   ! Admin account:", e?.message || "Already seeded");
+	}
 
 	try {
 		await auth.api.signUpEmail({
@@ -104,8 +109,12 @@ async function seed() {
 				name: "Toko Semarang Jaya",
 				role: "seller",
 			},
+			headers: new Headers(),
 		});
-	} catch {}
+		console.log("   ✓ Seller account created");
+	} catch (e: any) {
+		console.log("   ! Seller account:", e?.message || "Already seeded");
+	}
 
 	try {
 		await auth.api.signUpEmail({
@@ -115,8 +124,12 @@ async function seed() {
 				name: "Budi Santoso",
 				role: "buyer",
 			},
+			headers: new Headers(),
 		});
-	} catch {}
+		console.log("   ✓ Buyer account created");
+	} catch (e: any) {
+		console.log("   ! Buyer account:", e?.message || "Already seeded");
+	}
 
 	// 2. Seller Stores (verified)
 	console.log("🏪 Seeding seller stores...");
