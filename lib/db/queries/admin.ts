@@ -16,40 +16,54 @@ import { categories, orders, products, sellerStores, users } from "@/lib/db/sche
  * Get overall admin dashboard statistics
  */
 export async function getAdminDashboardStats() {
-	const [totalUsers] = await db.select({ count: count() }).from(users);
-	const [activeSellers] = await db
-		.select({ count: count() })
-		.from(sellerStores)
-		.where(eq(sellerStores.status, "active"));
-	const [pendingSellers] = await db
-		.select({ count: count() })
-		.from(sellerStores)
-		.where(eq(sellerStores.status, "pending"));
-	const [totalOrders] = await db.select({ count: count() }).from(orders);
-	const [totalRevenue] = await db.select({ total: sum(orders.totalAmount) }).from(orders);
+	try {
+		const [totalUsers] = await db.select({ count: count() }).from(users);
+		const [activeSellers] = await db
+			.select({ count: count() })
+			.from(sellerStores)
+			.where(eq(sellerStores.status, "active"));
+		const [pendingSellers] = await db
+			.select({ count: count() })
+			.from(sellerStores)
+			.where(eq(sellerStores.status, "pending"));
+		const [totalOrders] = await db.select({ count: count() }).from(orders);
+		const [totalRevenue] = await db.select({ total: sum(orders.totalAmount) }).from(orders);
 
-	return {
-		totalUsers: Number(totalUsers?.count ?? 0),
-		activeSellers: Number(activeSellers?.count ?? 0),
-		pendingSellers: Number(pendingSellers?.count ?? 0),
-		totalOrders: Number(totalOrders?.count ?? 0),
-		totalRevenue: Number(totalRevenue?.total ?? 0),
-	};
+		return {
+			totalUsers: Number(totalUsers?.count ?? 0),
+			activeSellers: Number(activeSellers?.count ?? 0),
+			pendingSellers: Number(pendingSellers?.count ?? 0),
+			totalOrders: Number(totalOrders?.count ?? 0),
+			totalRevenue: Number(totalRevenue?.total ?? 0),
+		};
+	} catch {
+		return {
+			totalUsers: 0,
+			activeSellers: 0,
+			pendingSellers: 0,
+			totalOrders: 0,
+			totalRevenue: 0,
+		};
+	}
 }
 
 /**
  * Get pending seller store approvals
  */
 export async function getPendingSellers() {
-	return db
-		.select({
-			store: sellerStores,
-			owner: users,
-		})
-		.from(sellerStores)
-		.innerJoin(users, eq(sellerStores.userId, users.id))
-		.where(eq(sellerStores.status, "pending"))
-		.orderBy(desc(sellerStores.createdAt));
+	try {
+		return await db
+			.select({
+				store: sellerStores,
+				owner: users,
+			})
+			.from(sellerStores)
+			.innerJoin(users, eq(sellerStores.userId, users.id))
+			.where(eq(sellerStores.status, "pending"))
+			.orderBy(desc(sellerStores.createdAt));
+	} catch {
+		return [];
+	}
 }
 
 /**

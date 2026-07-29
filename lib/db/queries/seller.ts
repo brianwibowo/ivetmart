@@ -16,8 +16,12 @@ import { orderSellers, orders, products, sellerStores, users, variants } from "@
  * Get seller store by user ID
  */
 export async function getSellerStoreByUserId(userId: string) {
-	const rows = await db.select().from(sellerStores).where(eq(sellerStores.userId, userId)).limit(1);
-	return rows[0] ?? null;
+	try {
+		const rows = await db.select().from(sellerStores).where(eq(sellerStores.userId, userId)).limit(1);
+		return rows[0] ?? null;
+	} catch {
+		return null;
+	}
 }
 
 /**

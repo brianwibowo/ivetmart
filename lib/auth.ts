@@ -22,10 +22,14 @@ import { auth } from "@/lib/auth-server";
  * ```
  */
 export const getSession = cache(async () => {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
-	return session;
+	try {
+		const session = await auth.api.getSession({
+			headers: await headers(),
+		});
+		return session;
+	} catch {
+		return null;
+	}
 });
 
 /**
