@@ -13,8 +13,8 @@
  * Run: `bun run db:seed`
  */
 
-import { auth } from "@/lib/auth-server";
-import { db } from "@/lib/db";
+import { auth } from "../auth-server";
+import { db } from "../db";
 import {
 	categories,
 	collections,
@@ -24,7 +24,7 @@ import {
 	sellerStores,
 	users,
 	variants,
-} from "@/lib/db/schema";
+} from "./schema";
 
 // ─── Helpers ────────────────────────────────────────────
 

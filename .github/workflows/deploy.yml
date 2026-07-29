@@ -91,7 +91,7 @@ jobs:
 
             # 4. Auto-push database schema & seed initial data inside container
             sleep 5
-            docker exec ivetmart-web bun run db:push || true
+            docker exec ivetmart-web bun run db:push --force || true
             docker exec ivetmart-web bun run db:seed || true
 
             docker system prune -f

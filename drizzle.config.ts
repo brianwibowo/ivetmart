@@ -13,7 +13,7 @@ if (!process.env.DATABASE_URL) {
 
 // biome-ignore lint/style/noDefaultExport: Drizzle Kit CLI requires default export
 export default defineConfig({
-	schema: "./lib/db/schema/index.ts",
+	schema: "./lib/db/schema/*",
 	out: "./drizzle",
 	dialect: "postgresql",
 	dbCredentials: {
