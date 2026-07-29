@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,13 @@ export function LoginForm() {
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
 
-	// Auto-redirect if already logged in
-	if (session) {
-		const target = callbackUrl || "/";
-		router.replace(target);
-	}
+	// Auto-redirect if already logged in (inside useEffect to prevent React render phase crash)
+	useEffect(() => {
+		if (session) {
+			const target = callbackUrl || "/";
+			router.replace(target);
+		}
+	}, [session, callbackUrl]);
 
 	const fillDemo = (demoEmail: string, demoPass: string) => {
 		setEmail(demoEmail);
