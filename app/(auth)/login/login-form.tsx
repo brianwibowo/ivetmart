@@ -13,16 +13,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 
 export function LoginForm() {
 	const router = useRouter();
+	const { data: session } = useSession();
 	const searchParams = useSearchParams();
 	const callbackUrl = searchParams.get("callbackUrl");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
+
+	// Auto-redirect if already logged in
+	if (session) {
+		const target = callbackUrl || "/";
+		router.replace(target);
+	}
 
 	const fillDemo = (demoEmail: string, demoPass: string) => {
 		setEmail(demoEmail);
@@ -54,10 +61,9 @@ export function LoginForm() {
 			return;
 		}
 
-		// Redirect to callback URL or home
+		// Force hard navigation to refresh session in header & layout
 		const target = callbackUrl || "/";
-		router.push(target);
-		router.refresh();
+		window.location.href = target;
 	};
 
 	return (

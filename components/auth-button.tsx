@@ -44,9 +44,7 @@ export function AuthButton() {
 				asChild
 				className="font-semibold text-xs sm:text-sm border-[#80070A]/40 text-[#80070A] hover:bg-[#80070A]/10"
 			>
-				<Link href="/login" target="_blank" rel="noopener noreferrer">
-					Masuk
-				</Link>
+				<Link href="/login">Masuk</Link>
 			</Button>
 		);
 	}
