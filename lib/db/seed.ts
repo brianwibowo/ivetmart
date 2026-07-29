@@ -86,49 +86,52 @@ async function seed() {
 
 	// Seed better-auth users
 	console.log("🔑 Seeding better-auth accounts...");
-	try {
-		await auth.api.signUpEmail({
-			body: {
-				email: "admin@ivetmart.com",
-				password: "admin123",
-				name: "Admin Ivet Mart",
-				role: "admin",
-			},
-			headers: new Headers(),
-		});
-		console.log("   ✓ Admin account created");
-	} catch (e: any) {
-		console.log("   ! Admin account:", e?.message || "Already seeded");
-	}
+	const accountsToSeed = [
+		{
+			email: "admin@ivetmart.com",
+			password: "admin123",
+			name: "Admin Ivet Mart",
+			role: "admin",
+		},
+		{
+			email: "seller@ivetmart.com",
+			password: "seller123",
+			name: "Toko Semarang Jaya",
+			role: "seller",
+		},
+		{
+			email: "buyer@ivetmart.com",
+			password: "buyer123",
+			name: "Budi Santoso",
+			role: "buyer",
+		},
+	];
 
-	try {
-		await auth.api.signUpEmail({
-			body: {
-				email: "seller@ivetmart.com",
-				password: "seller123",
-				name: "Toko Semarang Jaya",
-				role: "seller",
-			},
-			headers: new Headers(),
-		});
-		console.log("   ✓ Seller account created");
-	} catch (e: any) {
-		console.log("   ! Seller account:", e?.message || "Already seeded");
-	}
-
-	try {
-		await auth.api.signUpEmail({
-			body: {
-				email: "buyer@ivetmart.com",
-				password: "buyer123",
-				name: "Budi Santoso",
-				role: "buyer",
-			},
-			headers: new Headers(),
-		});
-		console.log("   ✓ Buyer account created");
-	} catch (e: any) {
-		console.log("   ! Buyer account:", e?.message || "Already seeded");
+	for (const acc of accountsToSeed) {
+		try {
+			const res = await auth.api.signUpEmail({
+				body: {
+					email: acc.email,
+					password: acc.password,
+					name: acc.name,
+				},
+				headers: new Headers(),
+			});
+			if (res?.user?.id && acc.role !== "buyer") {
+				await auth.api
+					.setRole({
+						body: {
+							userId: res.user.id,
+							role: acc.role as "admin" | "user",
+						},
+						headers: new Headers(),
+					})
+					.catch(() => null);
+			}
+			console.log(`   ✓ Account created: ${acc.email} (${acc.role})`);
+		} catch (e: any) {
+			console.log(`   ! Account ${acc.email}:`, e?.message || "Already seeded");
+		}
 	}
 
 	// 2. Seller Stores (verified)
