@@ -28,12 +28,16 @@ export async function getSellerStoreByUserId(userId: string) {
  * Get seller store by slug (public store page)
  */
 export async function getSellerStoreBySlug(slug: string) {
-	const rows = await db
-		.select()
-		.from(sellerStores)
-		.where(and(eq(sellerStores.slug, slug), eq(sellerStores.status, "active")))
-		.limit(1);
-	return rows[0] ?? null;
+	try {
+		const rows = await db
+			.select()
+			.from(sellerStores)
+			.where(and(eq(sellerStores.slug, slug), eq(sellerStores.status, "active")))
+			.limit(1);
+		return rows[0] ?? null;
+	} catch {
+		return null;
+	}
 }
 
 /**
