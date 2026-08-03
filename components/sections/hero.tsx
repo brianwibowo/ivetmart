@@ -34,6 +34,7 @@ export function Hero() {
 							alt="Sunlit interior space"
 							fill
 							priority
+							loading="eager"
 							sizes="100vw"
 							className="object-cover opacity-90 mix-blend-multiply"
 						/>
