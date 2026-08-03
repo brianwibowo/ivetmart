@@ -21,62 +21,66 @@ export async function getActiveProducts(options?: {
 	category?: string;
 	collection?: string;
 }) {
-	const limit = options?.limit ?? 50;
-	const offset = options?.offset ?? 0;
+	try {
+		const limit = options?.limit ?? 50;
+		const offset = options?.offset ?? 0;
 
-	const whereConditions: (SQL | undefined)[] = [eq(products.active, true)];
+		const whereConditions: (SQL | undefined)[] = [eq(products.active, true)];
 
-	if (options?.search) {
-		whereConditions.push(ilike(products.name, `%${options.search.toLowerCase()}%`));
+		if (options?.search) {
+			whereConditions.push(ilike(products.name, `%${options.search.toLowerCase()}%`));
+		}
+
+		if (options?.category) {
+			whereConditions.push(eq(products.categoryId, options.category));
+		}
+
+		const rows = await db
+			.select({
+				product: products,
+				category: categories,
+				sellerStore: sellerStores,
+			})
+			.from(products)
+			.leftJoin(categories, eq(products.categoryId, categories.id))
+			.leftJoin(sellerStores, eq(products.sellerStoreId, sellerStores.id))
+			.where(and(...whereConditions))
+			.limit(limit)
+			.offset(offset);
+
+		// Fetch variants for each product
+		const productIds = rows.map((r) => r.product.id);
+		const productVariants = productIds.length
+			? await db.select().from(variants).where(inArray(variants.productId, productIds))
+			: [];
+
+		return rows.map(({ product, category, sellerStore }) => ({
+			...product,
+			images: (product.images as string[]) ?? [],
+			category: category ? { id: category.id, name: category.name, slug: category.slug } : undefined,
+			seller: sellerStore
+				? {
+						id: sellerStore.id,
+						name: sellerStore.name,
+						slug: sellerStore.slug,
+						logoUrl: sellerStore.logoUrl,
+					}
+				: undefined,
+			variants: productVariants
+				.filter((v) => v.productId === product.id)
+				.map((v) => ({
+					id: v.id,
+					productId: v.productId ?? product.id,
+					name: v.name ?? "",
+					price: String(v.price),
+					stock: v.stock ?? 0,
+					images: (v.images as string[]) ?? [],
+					attributes: (v.attributes as Record<string, string>) ?? {},
+				})),
+		}));
+	} catch {
+		return [];
 	}
-
-	if (options?.category) {
-		whereConditions.push(eq(products.categoryId, options.category));
-	}
-
-	const rows = await db
-		.select({
-			product: products,
-			category: categories,
-			sellerStore: sellerStores,
-		})
-		.from(products)
-		.leftJoin(categories, eq(products.categoryId, categories.id))
-		.leftJoin(sellerStores, eq(products.sellerStoreId, sellerStores.id))
-		.where(and(...whereConditions))
-		.limit(limit)
-		.offset(offset);
-
-	// Fetch variants for each product
-	const productIds = rows.map((r) => r.product.id);
-	const productVariants = productIds.length
-		? await db.select().from(variants).where(inArray(variants.productId, productIds))
-		: [];
-
-	return rows.map(({ product, category, sellerStore }) => ({
-		...product,
-		images: (product.images as string[]) ?? [],
-		category: category ? { id: category.id, name: category.name, slug: category.slug } : undefined,
-		seller: sellerStore
-			? {
-					id: sellerStore.id,
-					name: sellerStore.name,
-					slug: sellerStore.slug,
-					logoUrl: sellerStore.logoUrl,
-				}
-			: undefined,
-		variants: productVariants
-			.filter((v) => v.productId === product.id)
-			.map((v) => ({
-				id: v.id,
-				productId: v.productId ?? product.id,
-				name: v.name ?? "",
-				price: String(v.price),
-				stock: v.stock ?? 0,
-				images: (v.images as string[]) ?? [],
-				attributes: (v.attributes as Record<string, string>) ?? {},
-			})),
-	}));
 }
 
 /**

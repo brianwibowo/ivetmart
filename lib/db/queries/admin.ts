@@ -107,19 +107,23 @@ export async function rejectSellerStore(storeId: string) {
  * Get all categories with product counts
  */
 export async function getAllCategoriesWithCounts() {
-	const allCategories = await db.select().from(categories);
-	const productCounts = await db
-		.select({
-			categoryId: products.categoryId,
-			count: count(),
-		})
-		.from(products)
-		.groupBy(products.categoryId);
+	try {
+		const allCategories = await db.select().from(categories);
+		const productCounts = await db
+			.select({
+				categoryId: products.categoryId,
+				count: count(),
+			})
+			.from(products)
+			.groupBy(products.categoryId);
 
-	const countMap = new Map(productCounts.map((p) => [p.categoryId, Number(p.count)]));
+		const countMap = new Map(productCounts.map((p) => [p.categoryId, Number(p.count)]));
 
-	return allCategories.map((cat) => ({
-		...cat,
-		productCount: countMap.get(cat.id) ?? 0,
-	}));
+		return allCategories.map((cat) => ({
+			...cat,
+			productCount: countMap.get(cat.id) ?? 0,
+		}));
+	} catch {
+		return [];
+	}
 }

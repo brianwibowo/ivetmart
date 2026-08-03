@@ -40,41 +40,53 @@ export async function getSellerStoreBySlug(slug: string) {
  * Get seller products list
  */
 export async function getSellerProducts(sellerStoreId: string) {
-	const sellerProducts = await db.select().from(products).where(eq(products.sellerStoreId, sellerStoreId));
+	try {
+		const sellerProducts = await db.select().from(products).where(eq(products.sellerStoreId, sellerStoreId));
 
-	const productIds = sellerProducts.map((p) => p.id);
-	const productVariants = productIds.length ? await db.select().from(variants) : [];
+		const productIds = sellerProducts.map((p) => p.id);
+		const productVariants = productIds.length ? await db.select().from(variants) : [];
 
-	return sellerProducts.map((p) => ({
-		...p,
-		variants: productVariants.filter((v) => v.productId === p.id),
-	}));
+		return sellerProducts.map((p) => ({
+			...p,
+			variants: productVariants.filter((v) => v.productId === p.id),
+		}));
+	} catch {
+		return [];
+	}
 }
 
 /**
  * Get seller dashboard overview statistics
  */
 export async function getSellerStats(sellerStoreId: string) {
-	const [totalProductsRes] = await db
-		.select({ count: count() })
-		.from(products)
-		.where(eq(products.sellerStoreId, sellerStoreId));
+	try {
+		const [totalProductsRes] = await db
+			.select({ count: count() })
+			.from(products)
+			.where(eq(products.sellerStoreId, sellerStoreId));
 
-	const [ordersRes] = await db
-		.select({ count: count() })
-		.from(orderSellers)
-		.where(eq(orderSellers.sellerStoreId, sellerStoreId));
+		const [ordersRes] = await db
+			.select({ count: count() })
+			.from(orderSellers)
+			.where(eq(orderSellers.sellerStoreId, sellerStoreId));
 
-	const [revenueRes] = await db
-		.select({ totalRevenue: sum(orderSellers.subtotal) })
-		.from(orderSellers)
-		.where(and(eq(orderSellers.sellerStoreId, sellerStoreId), eq(orderSellers.status, "completed")));
+		const [revenueRes] = await db
+			.select({ totalRevenue: sum(orderSellers.subtotal) })
+			.from(orderSellers)
+			.where(and(eq(orderSellers.sellerStoreId, sellerStoreId), eq(orderSellers.status, "completed")));
 
-	return {
-		totalProducts: Number(totalProductsRes?.count ?? 0),
-		totalOrders: Number(ordersRes?.count ?? 0),
-		totalRevenue: Number(revenueRes?.totalRevenue ?? 0),
-	};
+		return {
+			totalProducts: Number(totalProductsRes?.count ?? 0),
+			totalOrders: Number(ordersRes?.count ?? 0),
+			totalRevenue: Number(revenueRes?.totalRevenue ?? 0),
+		};
+	} catch {
+		return {
+			totalProducts: 0,
+			totalOrders: 0,
+			totalRevenue: 0,
+		};
+	}
 }
 
 /**
