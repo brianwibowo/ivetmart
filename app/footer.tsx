@@ -206,9 +206,7 @@ export function Footer() {
 				</div>
 
 				<div className="mt-16 pt-6 border-t border-white/15 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-					<p className="text-xs text-white/70">
-						&copy; {new Date().getFullYear()} Ivet Mart. All rights reserved.
-					</p>
+					<p className="text-xs text-white/70">&copy; 2026 Ivet Mart. All rights reserved.</p>
 					<p className="text-xs text-white/70 tracking-[0.18em] uppercase font-medium">
 						Designed quietly · Made to last
 					</p>

@@ -1,4 +1,18 @@
-import type { APIProductReviewsBrowseResult } from "commerce-kit";
+export type APIProductReviewsBrowseResult = {
+	data: Array<{
+		id: string;
+		author: string;
+		content: string;
+		rating: number;
+		createdAt: string;
+	}>;
+	summary: {
+		averageRating: number;
+		totalCount: number;
+		reviewCount: number;
+	};
+};
+
 import { Star } from "lucide-react";
 import { ReviewForm } from "@/app/product/[slug]/review-form";
 

@@ -15,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn, useSession } from "@/lib/auth-client";
 
+function getTargetForRole(role?: string, callbackUrl?: string | null) {
+	if (callbackUrl && callbackUrl !== "/") return callbackUrl;
+	if (role === "admin") return "/admin";
+	if (role === "seller") return "/seller";
+	return "/";
+}
+
 export function LoginForm() {
 	const router = useRouter();
 	const { data: session } = useSession();
@@ -27,8 +34,9 @@ export function LoginForm() {
 
 	// Auto-redirect if already logged in (inside useEffect to prevent React render phase crash)
 	useEffect(() => {
-		if (session) {
-			const target = callbackUrl || "/";
+		if (session?.user) {
+			const userRole = (session.user as { role?: string })?.role;
+			const target = getTargetForRole(userRole, callbackUrl);
 			router.replace(target);
 		}
 	}, [session, callbackUrl]);
@@ -57,15 +65,15 @@ export function LoginForm() {
 				setPending(false);
 				return;
 			}
+
+			// Role-based direct navigation (Admin -> /admin, Seller -> /seller, Buyer -> /)
+			const userRole = (result.data?.user as { role?: string })?.role;
+			const target = getTargetForRole(userRole, callbackUrl);
+			window.location.href = target;
 		} catch {
 			setError("Terjadi kesalahan koneksi. Silakan coba lagi.");
 			setPending(false);
-			return;
 		}
-
-		// Force hard navigation to refresh session in header & layout
-		const target = callbackUrl || "/";
-		window.location.href = target;
 	};
 
 	return (

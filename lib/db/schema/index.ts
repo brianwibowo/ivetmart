@@ -16,5 +16,4 @@ export * from "./platform-settings";
 export * from "./products";
 export * from "./reviews";
 export * from "./seller-stores";
-export * from "./users";
 export * from "./wishlists";

@@ -6,13 +6,13 @@
  */
 
 import { decimal, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { storeStatusEnum } from "./enums";
-import { users } from "./users";
 
 export const sellerStores = pgTable("seller_stores", {
 	id: uuid("id").primaryKey().defaultRandom(),
-	userId: uuid("user_id")
-		.references(() => users.id, { onDelete: "cascade" })
+	userId: text("user_id")
+		.references(() => user.id, { onDelete: "cascade" })
 		.unique()
 		.notNull(),
 	name: varchar("name", { length: 255 }).notNull(),

@@ -1,11 +1,10 @@
-import type { JSONContent as TiptapJSONContent } from "@tiptap/core";
+import type { JSONContent } from "@tiptap/core";
 import { Image } from "@tiptap/extension-image";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Color, FontFamily, FontSize, LineHeight, TextStyle } from "@tiptap/extension-text-style";
 import { Youtube } from "@tiptap/extension-youtube";
 import { StarterKit } from "@tiptap/starter-kit";
 import { renderToReactElement } from "@tiptap/static-renderer";
-import type { JSONContent } from "commerce-kit";
 
 const extensions = [
 	StarterKit.configure({
@@ -32,10 +31,10 @@ const extensions = [
 
 export function TiptapRenderer({ content }: { content: JSONContent | null | undefined }) {
 	if (!content) return null;
-	const children = (content as TiptapJSONContent).content;
+	const children = (content as JSONContent).content;
 	if (!Array.isArray(children) || children.length === 0) return null;
 	try {
-		return <>{renderToReactElement({ content: content as TiptapJSONContent, extensions })}</>;
+		return <>{renderToReactElement({ content: content as JSONContent, extensions })}</>;
 	} catch (error) {
 		console.error("TiptapRenderer failed to render content", error);
 		return null;

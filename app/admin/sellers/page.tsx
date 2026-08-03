@@ -16,7 +16,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
-import { sellerStores, users } from "@/lib/db/schema";
+import { sellerStores, user } from "@/lib/db/schema";
 
 export default async function AdminSellersPage() {
 	await requireAdmin();
@@ -24,10 +24,10 @@ export default async function AdminSellersPage() {
 	const allStores = await db
 		.select({
 			store: sellerStores,
-			owner: users,
+			owner: user,
 		})
 		.from(sellerStores)
-		.innerJoin(users, eq(sellerStores.userId, users.id))
+		.innerJoin(user, eq(sellerStores.userId, user.id))
 		.orderBy(desc(sellerStores.createdAt));
 
 	const pendingStores = allStores.filter((s) => s.store.status === "pending");

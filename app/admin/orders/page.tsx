@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
-import { orderSellers, orders, sellerStores, users } from "@/lib/db/schema";
+import { orderSellers, orders, sellerStores, user } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/money";
 
 export default async function AdminOrdersPage(props: { searchParams?: Promise<{ page?: string }> }) {
@@ -30,12 +30,12 @@ export default async function AdminOrdersPage(props: { searchParams?: Promise<{ 
 			subOrder: orderSellers,
 			masterOrder: orders,
 			sellerStore: sellerStores,
-			buyer: users,
+			buyer: user,
 		})
 		.from(orderSellers)
 		.innerJoin(orders, eq(orderSellers.orderId, orders.id))
 		.innerJoin(sellerStores, eq(orderSellers.sellerStoreId, sellerStores.id))
-		.leftJoin(users, eq(orders.buyerId, users.id))
+		.leftJoin(user, eq(orders.buyerId, user.id))
 		.orderBy(desc(orderSellers.createdAt))
 		.limit(pageSize)
 		.offset(offset);

@@ -39,5 +39,6 @@ export const getSession = cache(async () => {
 export async function getUserRole() {
 	const session = await getSession();
 	if (!session) return null;
-	return (session.user as Record<string, unknown>).role as "buyer" | "seller" | "admin" | null;
+	const role = (session.user as { role?: string }).role;
+	return (role || "buyer") as "buyer" | "seller" | "admin";
 }

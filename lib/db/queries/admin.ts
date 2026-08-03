@@ -10,14 +10,14 @@
 
 import { count, desc, eq, sum } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { categories, orders, products, sellerStores, users } from "@/lib/db/schema";
+import { categories, orders, products, sellerStores, user } from "@/lib/db/schema";
 
 /**
  * Get overall admin dashboard statistics
  */
 export async function getAdminDashboardStats() {
 	try {
-		const [totalUsers] = await db.select({ count: count() }).from(users);
+		const [totalUsers] = await db.select({ count: count() }).from(user);
 		const [activeSellers] = await db
 			.select({ count: count() })
 			.from(sellerStores)
@@ -55,10 +55,10 @@ export async function getPendingSellers() {
 		return await db
 			.select({
 				store: sellerStores,
-				owner: users,
+				owner: user,
 			})
 			.from(sellerStores)
-			.innerJoin(users, eq(sellerStores.userId, users.id))
+			.innerJoin(user, eq(sellerStores.userId, user.id))
 			.where(eq(sellerStores.status, "pending"))
 			.orderBy(desc(sellerStores.createdAt));
 	} catch {
@@ -82,7 +82,7 @@ export async function approveSellerStore(storeId: string) {
 
 	if (updated) {
 		// Update user role to seller if not already
-		await db.update(users).set({ role: "seller" }).where(eq(users.id, updated.userId));
+		await db.update(user).set({ role: "seller" }).where(eq(user.id, updated.userId));
 	}
 
 	return updated;

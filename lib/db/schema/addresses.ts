@@ -6,12 +6,12 @@
  */
 
 import { boolean, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { users } from "./users";
+import { user } from "./auth";
 
 export const addresses = pgTable("addresses", {
 	id: uuid("id").primaryKey().defaultRandom(),
-	userId: uuid("user_id")
-		.references(() => users.id, { onDelete: "cascade" })
+	userId: text("user_id")
+		.references(() => user.id, { onDelete: "cascade" })
 		.notNull(),
 	label: varchar("label", { length: 50 }).notNull(),
 	recipientName: varchar("recipient_name", { length: 255 }).notNull(),

@@ -17,6 +17,7 @@ import { CookieConsent } from "@/components/cookie-consent";
 import { ErrorOverlayRemover, NavigationReporter } from "@/components/devtools";
 import { NewsletterDialog } from "@/components/newsletter-dialog";
 import { ReferralBadge } from "@/components/referral-badge";
+import { StorefrontWrapper } from "@/components/storefront-wrapper";
 import { Toaster } from "@/components/ui/sonner";
 import { YnsLink } from "@/components/yns-link";
 import { AUTH_ENABLED } from "@/lib/auth-config";
@@ -137,47 +138,50 @@ async function CartProviderWrapper({ children }: { children: React.ReactNode }) 
 
 	return (
 		<CartProvider initialCart={cart} initialCartId={cartId}>
-			<div className="flex min-h-screen flex-col bg-background">
-				<AnnouncementBar />
-				<header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl">
-					<div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
-						<div className="flex items-center justify-between h-16">
-							<div className="flex items-center gap-10">
-								<YnsLink
-									prefetch={"eager"}
-									href="/"
-									className="flex items-center gap-2.5 yns-display text-xl font-bold tracking-tight text-[#80070A] font-serif"
-								>
-									<Image
-										src="/logo.png"
-										alt="Ivet Mart Logo"
-										width={36}
-										height={36}
-										className="h-9 w-auto object-contain shrink-0"
-										priority
-									/>
-									<span>Ivet Mart</span>
-								</YnsLink>
-								<Navbar links={links} />
-							</div>
-							<div className="flex items-center gap-2">
-								<Suspense>
-									<SearchInput />
-								</Suspense>
-								{AUTH_ENABLED && (
-									<Suspense fallback={null}>
-										<AuthButton />
+			<StorefrontWrapper
+				announcement={<AnnouncementBar />}
+				header={
+					<header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur-xl">
+						<div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+							<div className="flex items-center justify-between h-16">
+								<div className="flex items-center gap-10">
+									<YnsLink
+										prefetch={"eager"}
+										href="/"
+										className="flex items-center gap-2.5 yns-display text-xl font-bold tracking-tight text-[#80070A] font-serif"
+									>
+										<Image
+											src="/logo.png"
+											alt="Ivet Mart Logo"
+											width={36}
+											height={36}
+											className="h-9 w-auto object-contain shrink-0"
+											priority
+										/>
+										<span>Ivet Mart</span>
+									</YnsLink>
+									<Navbar links={links} />
+								</div>
+								<div className="flex items-center gap-2">
+									<Suspense>
+										<SearchInput />
 									</Suspense>
-								)}
-								<CartButton />
+									{AUTH_ENABLED && (
+										<Suspense fallback={null}>
+											<AuthButton />
+										</Suspense>
+									)}
+									<CartButton />
+								</div>
 							</div>
 						</div>
-					</div>
-				</header>
-				<div className="flex-1">{children}</div>
-				<Footer />
-				<ReferralBadge />
-			</div>
+					</header>
+				}
+				footer={<Footer />}
+				referralBadge={<ReferralBadge />}
+			>
+				{children}
+			</StorefrontWrapper>
 			<CartSidebar />
 		</CartProvider>
 	);

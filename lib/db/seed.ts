@@ -13,6 +13,7 @@
  * Run: `bun run db:seed`
  */
 
+import { eq } from "drizzle-orm";
 import { auth } from "../auth-server";
 import { db } from "../db";
 import {
@@ -22,70 +23,17 @@ import {
 	productCollections,
 	products,
 	sellerStores,
-	users,
+	user,
 	variants,
 } from "./schema";
-
-// ─── Helpers ────────────────────────────────────────────
-
-/**
- * Simple hash for seed passwords.
- * In production, better-auth handles hashing. This is seed-only.
- */
-async function hashPassword(password: string): Promise<string> {
-	const encoder = new TextEncoder();
-	const data = encoder.encode(password);
-	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-	const hashArray = Array.from(new Uint8Array(hashBuffer));
-	return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 // ─── Seed Data ──────────────────────────────────────────
 
 async function seed() {
 	console.log("🌱 Seeding database...\n");
 
-	// 1. Users
-	console.log("👥 Seeding users...");
-	const adminHash = await hashPassword("admin123");
-	const sellerHash = await hashPassword("seller123");
-	const buyerHash = await hashPassword("buyer123");
-
-	await db
-		.insert(users)
-		.values([
-			{
-				id: "00000000-0000-0000-0000-000000000001",
-				email: "admin@ivetmart.com",
-				name: "Admin Ivet Mart",
-				passwordHash: adminHash,
-				phone: "081234567890",
-				role: "admin",
-				status: "active",
-			},
-			{
-				id: "00000000-0000-0000-0000-000000000002",
-				email: "seller@ivetmart.com",
-				name: "Toko Semarang Jaya",
-				passwordHash: sellerHash,
-				phone: "081234567891",
-				role: "seller",
-				status: "active",
-			},
-			{
-				id: "00000000-0000-0000-0000-000000000003",
-				email: "buyer@ivetmart.com",
-				name: "Budi Santoso",
-				passwordHash: buyerHash,
-				phone: "081234567892",
-				role: "buyer",
-				status: "active",
-			},
-		])
-		.onConflictDoNothing();
-
-	// Seed better-auth users
-	console.log("🔑 Seeding better-auth accounts...");
+	// 1. Seed users & accounts
+	console.log("🔑 Seeding users & better-auth accounts...");
 	const accountsToSeed = [
 		{
 			email: "admin@ivetmart.com",
@@ -107,8 +55,11 @@ async function seed() {
 		},
 	];
 
+	const createdUserIds: Record<string, string> = {};
+
 	for (const acc of accountsToSeed) {
 		try {
+			let userId = "";
 			const res = await auth.api.signUpEmail({
 				body: {
 					email: acc.email,
@@ -117,31 +68,42 @@ async function seed() {
 				},
 				headers: new Headers(),
 			});
-			if (res?.user?.id && acc.role !== "buyer") {
-				await auth.api
-					.setRole({
-						body: {
-							userId: res.user.id,
-							role: acc.role as "admin" | "user",
-						},
-						headers: new Headers(),
-					})
-					.catch(() => null);
+			if (res?.user?.id) {
+				userId = res.user.id;
 			}
-			console.log(`   ✓ Account created: ${acc.email} (${acc.role})`);
+			if (!userId) {
+				const existing = await db.select().from(user).where(eq(user.email, acc.email)).limit(1);
+				if (existing[0]) userId = existing[0].id;
+			}
+
+			if (userId) {
+				await db.update(user).set({ role: acc.role }).where(eq(user.id, userId));
+				createdUserIds[acc.email] = userId;
+			}
+
+			console.log(`   ✓ Account created/updated: ${acc.email} (${acc.role})`);
 		} catch (e: any) {
-			console.log(`   ! Account ${acc.email}:`, e?.message || "Already seeded");
+			// If already exists, fetch user id and ensure role is updated
+			const existing = await db.select().from(user).where(eq(user.email, acc.email)).limit(1);
+			if (existing[0]) {
+				await db.update(user).set({ role: acc.role }).where(eq(user.id, existing[0].id));
+				createdUserIds[acc.email] = existing[0].id;
+			}
+			console.log(`   ✓ Account updated: ${acc.email} (${acc.role})`);
 		}
 	}
 
 	// 2. Seller Stores (verified)
 	console.log("🏪 Seeding seller stores...");
+	const sellerUserId = createdUserIds["seller@ivetmart.com"] || "00000000-0000-0000-0000-000000000002";
+	const adminUserId = createdUserIds["admin@ivetmart.com"] || "00000000-0000-0000-0000-000000000001";
+
 	await db
 		.insert(sellerStores)
 		.values([
 			{
 				id: "00000000-0000-0000-0000-000000000010",
-				userId: "00000000-0000-0000-0000-000000000002",
+				userId: sellerUserId,
 				name: "Toko Semarang Jaya",
 				slug: "semarang-jaya",
 				description:
@@ -156,7 +118,7 @@ async function seed() {
 			},
 			{
 				id: "00000000-0000-0000-0000-000000000099",
-				userId: "00000000-0000-0000-0000-000000000001",
+				userId: adminUserId,
 				name: "Ivet Mart Official Store",
 				slug: "ivet-mart-official",
 				description: "Toko Resmi Universitas Ivet Semarang — Merchandise Eksklusif & Produk Khas",

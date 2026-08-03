@@ -1,6 +1,14 @@
 "use client";
 
-import type { APIProductFiltersResult } from "commerce-kit";
+export type APIProductFiltersResult = {
+	categories: Array<{ id: string; name: string; slug: string }>;
+	tags: string[];
+	priceBounds: { min: number; max: number };
+	variantTypes: any[];
+	collections: any[];
+	brands: any[];
+};
+
 import { SlidersHorizontalIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, startTransition, useOptimistic, useState } from "react";
@@ -248,18 +256,20 @@ function FilterControls({ facets, showCategories = true, showCollections = true 
 								<CollapsibleList
 									items={vt.values}
 									className="space-y-2"
-									renderItem={(value) => {
+									renderItem={(value: any) => {
 										const id = `${vt.label}-${value}`;
 										const checked = selectedValues.includes(value);
 										return (
-											<li key={value} className="flex items-center gap-2">
+											<li key={String(value)} className="flex items-center gap-2">
 												<Checkbox
 													id={id}
 													checked={checked}
-													onCheckedChange={(state) => toggleVariantValue(vt.label, value, state === true)}
+													onCheckedChange={(state) =>
+														toggleVariantValue(vt.label, String(value), state === true)
+													}
 												/>
 												<label htmlFor={id} className="cursor-pointer text-sm text-muted-foreground">
-													{value}
+													{String(value)}
 												</label>
 											</li>
 										);

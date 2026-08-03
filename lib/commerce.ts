@@ -11,7 +11,7 @@ import {
 	collections,
 	products,
 	reviews,
-	users,
+	user,
 	variants,
 } from "@/lib/db/schema";
 
@@ -249,10 +249,10 @@ export const commerce = {
 		const dbReviews = await db
 			.select({
 				review: reviews,
-				user: users,
+				user: user,
 			})
 			.from(reviews)
-			.leftJoin(users, eq(reviews.userId, users.id))
+			.leftJoin(user, eq(reviews.userId, user.id))
 			.where(eq(reviews.productId, product.id));
 
 		const formattedReviews = dbReviews.map(({ review, user }) => ({

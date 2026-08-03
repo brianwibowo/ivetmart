@@ -10,7 +10,7 @@
 
 import { and, count, eq, sum } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { orderSellers, orders, products, sellerStores, users, variants } from "@/lib/db/schema";
+import { orderSellers, orders, products, sellerStores, user, variants } from "@/lib/db/schema";
 
 /**
  * Get seller store by user ID
@@ -85,11 +85,11 @@ export async function getSellerOrders(sellerStoreId: string) {
 		.select({
 			subOrder: orderSellers,
 			masterOrder: orders,
-			buyer: users,
+			buyer: user,
 		})
 		.from(orderSellers)
 		.innerJoin(orders, eq(orderSellers.orderId, orders.id))
-		.leftJoin(users, eq(orders.buyerId, users.id))
+		.leftJoin(user, eq(orders.buyerId, user.id))
 		.where(eq(orderSellers.sellerStoreId, sellerStoreId));
 
 	return subOrders;

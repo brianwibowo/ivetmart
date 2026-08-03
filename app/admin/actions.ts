@@ -11,7 +11,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
-import { categories, platformSettings, products, sellerStores, users, variants } from "@/lib/db/schema";
+import { categories, platformSettings, products, sellerStores, user, variants } from "@/lib/db/schema";
 import { safe } from "@/lib/utils";
 
 type ActionResult = { success: boolean; message: string };
@@ -39,7 +39,7 @@ export async function approveSellerAction(_prev: ActionResult, formData: FormDat
 				.update(sellerStores)
 				.set({ status: "active", verifiedAt: new Date(), updatedAt: new Date() })
 				.where(eq(sellerStores.id, storeId));
-			await tx.update(users).set({ role: "seller" }).where(eq(users.id, store.userId));
+			await tx.update(user).set({ role: "seller" }).where(eq(user.id, store.userId));
 		}),
 	);
 
@@ -94,10 +94,7 @@ export async function toggleUserStatusAction(_prev: ActionResult, formData: Form
 	const nextStatus = currentStatus === "active" ? "suspended" : "active";
 
 	const [err] = await safe(
-		db
-			.update(users)
-			.set({ status: nextStatus as "active" | "suspended", updatedAt: new Date() })
-			.where(eq(users.id, userId)),
+		db.update(user).set({ status: nextStatus, updatedAt: new Date() }).where(eq(user.id, userId)),
 	);
 
 	if (err) {

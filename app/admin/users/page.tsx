@@ -15,7 +15,7 @@ import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { user } from "@/lib/db/schema";
 
 export default async function AdminUsersPage(props: { searchParams?: Promise<{ page?: string }> }) {
 	await requireAdmin();
@@ -24,14 +24,14 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
 	const pageSize = 10;
 	const offset = (currentPage - 1) * pageSize;
 
-	const [totalCountRes] = await db.select({ count: count() }).from(users);
+	const [totalCountRes] = await db.select({ count: count() }).from(user);
 	const totalItems = Number(totalCountRes?.count ?? 0);
 	const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
 	const pagedUsers = await db
 		.select()
-		.from(users)
-		.orderBy(desc(users.createdAt))
+		.from(user)
+		.orderBy(desc(user.createdAt))
 		.limit(pageSize)
 		.offset(offset);
 
@@ -73,7 +73,7 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
 										</td>
 										<td className="px-4 py-3 text-xs text-muted-foreground font-mono">{user.phone || "-"}</td>
 										<td className="px-4 py-3">
-											<RoleBadge role={user.role} />
+											<RoleBadge role={user.role || "buyer"} />
 										</td>
 										<td className="px-4 py-3">
 											{user.status === "active" ? (
@@ -93,7 +93,7 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
 											{user.role !== "admin" && (
 												<ActionForm action={toggleUserStatusAction}>
 													<input type="hidden" name="userId" value={user.id} />
-													<input type="hidden" name="currentStatus" value={user.status} />
+													<input type="hidden" name="currentStatus" value={user.status || "active"} />
 													{user.status === "active" ? (
 														<SubmitButton
 															loadingText="..."

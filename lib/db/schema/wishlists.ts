@@ -4,15 +4,15 @@
  * Buyer product wishlist (many-to-many: user ↔ product).
  */
 
-import { pgTable, primaryKey, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { pgTable, primaryKey, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { products } from "./products";
-import { users } from "./users";
 
 export const wishlists = pgTable(
 	"wishlists",
 	{
-		userId: uuid("user_id")
-			.references(() => users.id, { onDelete: "cascade" })
+		userId: text("user_id")
+			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),
 		productId: varchar("product_id", { length: 50 })
 			.references(() => products.id, { onDelete: "cascade" })

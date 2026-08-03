@@ -5,13 +5,13 @@
  */
 
 import { relations } from "drizzle-orm";
-import { integer, pgTable, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { variants } from "./products";
-import { users } from "./users";
 
 export const carts = pgTable("carts", {
 	id: varchar("id", { length: 100 }).primaryKey(),
-	userId: uuid("user_id").references(() => users.id),
+	userId: text("user_id").references(() => user.id),
 	createdAt: timestamp("created_at").defaultNow(),
 	updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -34,7 +34,7 @@ export const cartItems = pgTable(
 // ─── Relations ──────────────────────────────────────────
 
 export const cartsRelations = relations(carts, ({ one, many }) => ({
-	user: one(users, { fields: [carts.userId], references: [users.id] }),
+	user: one(user, { fields: [carts.userId], references: [user.id] }),
 	items: many(cartItems),
 }));
 

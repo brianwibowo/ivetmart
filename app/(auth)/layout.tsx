@@ -39,7 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
 			{/* Footer Copyright */}
 			<p className="relative z-10 mt-8 text-center text-xs text-muted-foreground">
-				&copy; {new Date().getFullYear()} Universitas Ivet Semarang · Hak Cipta Dilindungi
+				&copy; 2026 Universitas Ivet Semarang · Hak Cipta Dilindungi
 			</p>
 		</div>
 	);

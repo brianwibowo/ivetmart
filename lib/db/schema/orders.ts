@@ -13,17 +13,17 @@
 import { relations } from "drizzle-orm";
 import { bigint, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { addresses } from "./addresses";
+import { user } from "./auth";
 import { orderStatusEnum } from "./enums";
 import { variants } from "./products";
 import { sellerStores } from "./seller-stores";
-import { users } from "./users";
 
 // ─── Master Order ───────────────────────────────────────
 
 export const orders = pgTable("orders", {
 	id: uuid("id").primaryKey().defaultRandom(),
-	buyerId: uuid("buyer_id")
-		.references(() => users.id)
+	buyerId: text("buyer_id")
+		.references(() => user.id)
 		.notNull(),
 	addressId: uuid("address_id").references(() => addresses.id),
 	totalAmount: bigint("total_amount", { mode: "number" }).notNull(),
@@ -73,7 +73,7 @@ export const orderItems = pgTable("order_items", {
 // ─── Relations ──────────────────────────────────────────
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
-	buyer: one(users, { fields: [orders.buyerId], references: [users.id] }),
+	buyer: one(user, { fields: [orders.buyerId], references: [user.id] }),
 	address: one(addresses, {
 		fields: [orders.addressId],
 		references: [addresses.id],

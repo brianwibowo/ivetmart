@@ -1,11 +1,10 @@
-import type { APIProductsBrowseResult } from "commerce-kit";
 import { ArrowUpRightIcon } from "lucide-react";
 import { cacheLife } from "next/cache";
 import { ProductCard } from "@/components/product-card";
-import { commerce } from "@/lib/commerce";
+import { commerce, type LocalProduct } from "@/lib/commerce";
 import { YnsLink } from "../yns-link";
 
-export type Product = APIProductsBrowseResult["data"][number];
+export type Product = LocalProduct;
 
 type ProductGridProps = {
 	eyebrow?: string;
