@@ -7,18 +7,30 @@
 
 "use client";
 
-import { ChevronRight, LayoutDashboard, LogOut, Package, Settings, ShoppingCart, Store } from "lucide-react";
+import {
+	ChevronRight,
+	ExternalLink,
+	Home,
+	LayoutDashboard,
+	LogOut,
+	Package,
+	Settings,
+	ShoppingCart,
+	Store,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { signOut } from "@/lib/auth-client";
 
 interface SellerSidebarNavProps {
 	storeName?: string;
+	storeSlug?: string;
 	storeStatus?: "pending" | "active" | "suspended" | "rejected";
 }
 
-export function SellerSidebarNav({ storeName, storeStatus }: SellerSidebarNavProps) {
+export function SellerSidebarNav({ storeName, storeSlug, storeStatus }: SellerSidebarNavProps) {
 	const pathname = usePathname();
 
 	const navItems = [
@@ -111,18 +123,37 @@ export function SellerSidebarNav({ storeName, storeStatus }: SellerSidebarNavPro
 				</nav>
 			</div>
 
-			{/* Logout / Store Front link */}
-			<div className="flex flex-col gap-2 pt-4 border-t border-border/40">
+			{/* Bottom Links */}
+			<div className="flex flex-col gap-1.5 pt-4 border-t border-border/40">
+				{storeSlug && storeStatus === "active" && (
+					<Link
+						href={`/store/${storeSlug}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="flex items-center justify-between text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 px-2.5 py-1.5 rounded-md transition-colors border border-amber-200/60"
+					>
+						<span className="flex items-center gap-2 truncate">
+							<Store className="h-3.5 w-3.5 shrink-0" />
+							<span className="truncate">Lihat Toko Publik</span>
+						</span>
+						<ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+					</Link>
+				)}
 				<Link
 					href="/"
-					className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1.5 transition-colors"
+					className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-secondary/60 transition-colors"
 				>
-					← Kembali ke Storefront
+					<Home className="h-3.5 w-3.5 text-primary" />
+					<span>Beranda Marketplace</span>
 				</Link>
 				<button
 					type="button"
-					onClick={() => signOut()}
-					className="flex items-center gap-2 text-xs font-medium text-destructive hover:bg-destructive/10 px-2 py-1.5 rounded-md transition-colors w-full text-left"
+					onClick={async () => {
+						toast.info("Anda telah keluar dari akun");
+						await signOut();
+						window.location.href = "/";
+					}}
+					className="flex items-center gap-2 text-xs font-medium text-destructive hover:bg-destructive/10 px-2 py-1.5 rounded-md transition-colors w-full text-left cursor-pointer"
 				>
 					<LogOut className="h-3.5 w-3.5" />
 					<span>Keluar Akun</span>

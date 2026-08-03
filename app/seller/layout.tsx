@@ -17,7 +17,7 @@ export default async function SellerLayout({ children }: { children: React.React
 
 	return (
 		<div className="flex min-h-[calc(100vh-4rem)] bg-background">
-			<SellerSidebarNav storeName={store?.name} storeStatus={store?.status} />
+			<SellerSidebarNav storeName={store?.name} storeSlug={store?.slug} storeStatus={store?.status} />
 			<main className="flex-1 p-6 md:p-8 max-w-7xl overflow-x-hidden">{children}</main>
 		</div>
 	);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, ShoppingBag } from "lucide-react";
+import { Info, Loader2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/app/cart/cart-context";
 import { CartItem } from "@/app/cart/cart-item";
 import { Button } from "@/components/ui/button";
@@ -27,13 +27,13 @@ export function CartSidebar() {
 			<SheetContent className="flex flex-col w-full sm:max-w-lg">
 				<SheetHeader className="border-b border-border pb-4">
 					<SheetTitle className="flex items-center gap-2">
-						Your Cart
+						Keranjang Belanja
 						{itemCount > 0 && (
-							<span className="text-sm font-normal text-muted-foreground">({itemCount} items)</span>
+							<span className="text-sm font-normal text-muted-foreground">({itemCount} produk)</span>
 						)}
 					</SheetTitle>
 					<SheetDescription className="sr-only">
-						Review items in your cart and proceed to checkout.
+						Tinjau produk dalam keranjang belanja Anda dan lanjut ke pembayaran.
 					</SheetDescription>
 				</SheetHeader>
 
@@ -42,12 +42,12 @@ export function CartSidebar() {
 						<div className="flex h-20 w-20 items-center justify-center rounded-full bg-secondary">
 							<ShoppingBag className="h-10 w-10 text-muted-foreground" />
 						</div>
-						<div className="text-center">
-							<p className="text-lg font-medium">Your cart is empty</p>
-							<p className="text-sm text-muted-foreground mt-1">Add some products to get started</p>
+						<div className="text-center space-y-1">
+							<p className="text-lg font-bold font-serif">Keranjang Belanja Kosong</p>
+							<p className="text-sm text-muted-foreground">Pilih produk favoritmu di katalog Ivet Mart.</p>
 						</div>
-						<Button variant="outline" onClick={closeCart}>
-							Continue Shopping
+						<Button variant="outline" onClick={closeCart} className="mt-2 font-semibold">
+							Lanjut Belanja
 						</Button>
 					</div>
 				) : (
@@ -61,19 +61,37 @@ export function CartSidebar() {
 						</ScrollArea>
 
 						<SheetFooter className="border-t border-border pt-4 mt-auto">
-							<div className="w-full space-y-4">
+							<div className="w-full space-y-3.5">
+								{/* Workflow Indicator Banner for Guests */}
+								<div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 p-3 text-xs border border-amber-200/80 text-amber-900 dark:text-amber-200 flex items-start gap-2.5 shadow-xs">
+									<Info className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+									<div className="space-y-0.5">
+										<p className="font-bold">💡 Skema Pembelian & Pembayaran:</p>
+										<p className="text-[11px] opacity-90 leading-tight">
+											Bebas checkout langsung sebagai <strong>Tamu</strong> atau <strong>Masuk Akun</strong>{" "}
+											untuk menyimpan riwayat pesanan Anda.
+										</p>
+									</div>
+								</div>
+
 								<div className="flex items-center justify-between text-base">
-									<span className="font-medium">Subtotal</span>
-									<span className="font-semibold">
+									<span className="font-medium text-muted-foreground">Subtotal Total</span>
+									<span className="font-bold text-foreground text-lg font-mono">
 										{formatMoney({ amount: subtotal, currency: CURRENCY, locale: LOCALE })}
 									</span>
 								</div>
-								<p className="text-xs text-muted-foreground">Shipping and taxes calculated at checkout</p>
+								<p className="text-xs text-muted-foreground">
+									Ongkir dan metode pengiriman dihitung saat checkout.
+								</p>
+
 								{/* Keep this a plain <a>, never <Link>/router.push: /checkout is proxied to a
 								    different Next.js zone (yns.store). A soft RSC nav 500s the cross-zone request.
 								    While a cart write is in flight, block the link: a full navigation now would
 								    load /checkout before the item is committed server-side and show an empty cart. */}
-								<Button asChild className="w-full h-12 text-base font-medium">
+								<Button
+									asChild
+									className="w-full h-12 text-base font-bold bg-[#80070A] hover:bg-[#680508] text-white"
+								>
 									<a
 										href={checkoutUrl}
 										aria-disabled={isMutating}
@@ -87,20 +105,20 @@ export function CartSidebar() {
 									>
 										{isMutating ? (
 											<>
-												<Loader2 className="h-4 w-4 animate-spin" />
-												Updating…
+												<Loader2 className="h-4 w-4 animate-spin mr-2" />
+												Memperbarui...
 											</>
 										) : (
-											"Checkout"
+											"Lanjut ke Pembayaran (Checkout)"
 										)}
 									</a>
 								</Button>
 								<button
 									type="button"
 									onClick={closeCart}
-									className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+									className="w-full text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors py-1"
 								>
-									Continue Shopping
+									← Lanjut Belanja Produk Lain
 								</button>
 							</div>
 						</SheetFooter>

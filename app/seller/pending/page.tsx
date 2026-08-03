@@ -73,7 +73,7 @@ export default async function SellerPendingPage() {
 					<Button asChild variant="outline" size="sm">
 						<Link href="/">
 							<ArrowLeft className="h-3.5 w-3.5 mr-1" />
-							Ke Storefront
+							Beranda Marketplace
 						</Link>
 					</Button>
 				</CardFooter>

@@ -7,6 +7,7 @@
 import { count, desc, eq } from "drizzle-orm";
 import { CheckCircle, Clock, ExternalLink, ShoppingBag, Truck } from "lucide-react";
 import Link from "next/link";
+import { OrderStatusStepper } from "@/components/order-status-stepper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,14 +128,16 @@ export default async function BuyerOrdersPage(props: { searchParams?: Promise<{ 
 													return (
 														<div
 															key={subOrder.id}
-															className="p-3.5 rounded-lg bg-muted/30 border border-border/40 space-y-2 text-xs"
+															className="p-4 rounded-xl bg-muted/30 border border-border/40 space-y-3 text-xs"
 														>
-															<div className="flex items-center justify-between">
-																<span className="font-semibold text-foreground">
+															<div className="flex items-center justify-between pb-1">
+																<span className="font-bold text-foreground font-serif text-sm">
 																	Toko: {sellerStore?.name || "Official Store"}
 																</span>
 																<StatusBadge status={subOrder.status} />
 															</div>
+
+															<OrderStatusStepper status={subOrder.status} />
 
 															<div className="divide-y divide-border/30">
 																{items.map((item) => (

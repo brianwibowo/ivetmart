@@ -8,6 +8,7 @@ import { ArrowLeft, PackagePlus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createProductAction } from "@/app/seller/actions";
+import { ProductImagePreviewInput } from "@/components/product-image-preview-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -106,6 +107,8 @@ export default async function NewProductPage() {
 								/>
 							</div>
 						</div>
+
+						<ProductImagePreviewInput />
 
 						<div className="space-y-2">
 							<Label htmlFor="prod-summary">Ringkasan Singkat</Label>

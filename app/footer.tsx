@@ -65,7 +65,7 @@ async function FooterCollections() {
 
 	return (
 		<div>
-			<h3 className="text-xs tracking-[0.22em] uppercase text-white/70 font-semibold">Shop</h3>
+			<h3 className="text-xs tracking-[0.22em] uppercase text-white/70 font-semibold">Belanja</h3>
 			<ul className="mt-5 space-y-3">
 				{collections.data.map((collection) => (
 					<li key={collection.id}>
@@ -100,7 +100,7 @@ async function FooterLegalPages() {
 
 	return (
 		<div>
-			<h3 className="text-xs tracking-[0.22em] uppercase text-white/70 font-semibold">Legal</h3>
+			<h3 className="text-xs tracking-[0.22em] uppercase text-white/70 font-semibold">Hukum & Kebijakan</h3>
 			<ul className="mt-5 space-y-3">
 				{pages.data.map((page) => (
 					<li key={page.id}>
@@ -160,45 +160,57 @@ export function Footer() {
 					<FooterCollections />
 
 					<div>
-						<h3 className="text-xs tracking-[0.22em] uppercase text-white/70 font-semibold">Support</h3>
+						<h3 className="text-xs tracking-[0.22em] uppercase text-white/70 font-semibold">
+							Navigasi Utama
+						</h3>
 						<ul className="mt-5 space-y-3">
+							<li>
+								<YnsLink
+									prefetch={"eager"}
+									href="/"
+									className="text-sm text-white/80 hover:text-white transition-colors"
+								>
+									Beranda
+								</YnsLink>
+							</li>
+							<li>
+								<YnsLink
+									prefetch={"eager"}
+									href="/products"
+									className="text-sm text-white/80 hover:text-white transition-colors"
+								>
+									Semua Produk
+								</YnsLink>
+							</li>
+							<li>
+								<YnsLink
+									prefetch={"eager"}
+									href="/store"
+									className="text-sm text-white/80 hover:text-white transition-colors"
+								>
+									Semua Toko
+								</YnsLink>
+							</li>
 							<li>
 								<YnsLink
 									prefetch={"eager"}
 									href="/about"
 									className="text-sm text-white/80 hover:text-white transition-colors"
 								>
-									About Us
+									Tentang Kami
 								</YnsLink>
 							</li>
-							<FooterContactLink />
 							<li>
 								<YnsLink
 									prefetch={"eager"}
 									href="/faq"
 									className="text-sm text-white/80 hover:text-white transition-colors"
 								>
-									FAQ
+									Pusat Bantuan
 								</YnsLink>
-							</li>
-							<li>
-								<YnsLink
-									prefetch={"eager"}
-									href="/cart"
-									className="text-sm text-white/80 hover:text-white transition-colors"
-								>
-									Returns
-								</YnsLink>
-							</li>
-							<li>
-								<a
-									href="mailto:ivetmart@unisvet.ac.id"
-									className="text-sm text-white/80 hover:text-white transition-colors"
-								>
-									Contact us
-								</a>
 							</li>
 							<FooterBlogLink />
+							<FooterContactLink />
 						</ul>
 					</div>
 
@@ -208,7 +220,7 @@ export function Footer() {
 				<div className="mt-16 pt-6 border-t border-white/15 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
 					<p className="text-xs text-white/70">&copy; 2026 Ivet Mart. All rights reserved.</p>
 					<p className="text-xs text-white/70 tracking-[0.18em] uppercase font-medium">
-						Designed quietly · Made to last
+						Dibuat dengan 💚 di Semarang
 					</p>
 				</div>
 			</div>

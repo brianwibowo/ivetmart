@@ -116,19 +116,14 @@ async function getInitialCart() {
 async function getNavLinks(): Promise<NavLink[]> {
 	"use cache";
 	cacheLife("hours");
-	const [collections, me] = await Promise.all([
-		commerce.collectionBrowse({ limit: 5 }).catch(() => ({ data: [] })),
-		meGetCached().catch(() => null),
-	]);
+	const me = await meGetCached().catch(() => null);
 	const blogEnabled = me?.store?.settings?.enabledTools?.blog ?? false;
-	const collectionList = collections?.data ?? [];
 	return [
 		{ href: "/", label: "Beranda" },
 		{ href: "/products", label: "Semua Produk" },
-		...collectionList.map((collection) => ({
-			href: `/collection/${collection.slug}`,
-			label: collection.name,
-		})),
+		{ href: "/store", label: "Semua Toko", variant: "cta" },
+		{ href: "/about", label: "Tentang" },
+		{ href: "/faq", label: "Bantuan" },
 		...(blogEnabled ? [{ href: "/blog", label: "Blog" }] : []),
 	];
 }

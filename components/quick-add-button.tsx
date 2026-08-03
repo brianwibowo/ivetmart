@@ -48,7 +48,9 @@ export function QuickAddButton({ variantId, variantPrice, variantImages, product
 			const result = await addToCart(variantId, 1);
 			const line = result.cart?.lineItems.find((item: any) => item.productVariant.id === variantId);
 			if (!result.success || !line) {
-				toast.error("This item is out of stock");
+				toast.error("Stok produk ini sedang tidak tersedia");
+			} else {
+				toast.success("Produk berhasil ditambahkan ke keranjang!");
 			}
 		});
 	};

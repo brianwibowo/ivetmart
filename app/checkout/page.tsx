@@ -8,7 +8,6 @@
 
 import { eq } from "drizzle-orm";
 import { CheckCircle, CreditCard, MapPin, ShieldCheck, ShoppingBag, Store } from "lucide-react";
-import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -19,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import { requireAuth } from "@/lib/auth-guard";
+import { getCartCookieJson } from "@/lib/cookies";
 import { db } from "@/lib/db";
 import { addresses, cartItems, products, sellerStores, variants } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/money";
@@ -28,8 +28,8 @@ export default async function CheckoutPage() {
 	const session = await requireAuth();
 	const userId = session.user.id;
 
-	const cookieStore = await cookies();
-	const cartId = cookieStore.get("cartId")?.value;
+	const cartCookie = await getCartCookieJson();
+	const cartId = cartCookie?.id;
 
 	if (!cartId) {
 		redirect("/cart");

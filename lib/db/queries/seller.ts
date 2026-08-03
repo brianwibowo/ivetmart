@@ -110,3 +110,30 @@ export async function getSellerOrders(sellerStoreId: string) {
 
 	return subOrders;
 }
+
+/**
+ * Get all active seller stores with their product listings (for /store directory page)
+ */
+export async function getAllActiveStoresWithProducts() {
+	try {
+		const stores = await db.select().from(sellerStores).where(eq(sellerStores.status, "active"));
+
+		const storeIds = stores.map((s) => s.id);
+		const allProducts = storeIds.length ? await db.select().from(products) : [];
+		const allVariants = allProducts.length ? await db.select().from(variants) : [];
+
+		return stores.map((store) => {
+			const storeProds = allProducts.filter((p) => p.sellerStoreId === store.id);
+			const prodsWithVars = storeProds.map((p) => ({
+				...p,
+				variants: allVariants.filter((v) => v.productId === p.id),
+			}));
+			return {
+				...store,
+				products: prodsWithVars,
+			};
+		});
+	} catch {
+		return [];
+	}
+}

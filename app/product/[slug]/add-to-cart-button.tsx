@@ -182,9 +182,11 @@ export function AddToCartButton({
 			const result = await addToCart(variantId, addedQuantity);
 			const line = result.cart?.lineItems.find((item: any) => item.productVariant.id === variantId);
 			if (!result.success || !line) {
-				toast.error("This item is out of stock");
+				toast.error("Stok produk ini sedang tidak tersedia");
 			} else if (line.quantity < previousQuantity + addedQuantity) {
-				toast.warning(`Only ${line.quantity} in stock — quantity adjusted`);
+				toast.warning(`Hanya tersisa ${line.quantity} stok — kuantitas disesuaikan`);
+			} else {
+				toast.success("Produk berhasil ditambahkan ke keranjang!");
 			}
 		});
 	};

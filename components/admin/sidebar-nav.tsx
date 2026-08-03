@@ -10,6 +10,7 @@
 import {
 	ChevronRight,
 	FolderTree,
+	Home,
 	LayoutDashboard,
 	LogOut,
 	Package,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { signOut } from "@/lib/auth-client";
 
@@ -125,17 +127,22 @@ export function AdminSidebarNav({ pendingSellersCount = 0 }: AdminSidebarNavProp
 			</div>
 
 			{/* Bottom Links */}
-			<div className="flex flex-col gap-2 pt-4 border-t border-border/40">
+			<div className="flex flex-col gap-1.5 pt-4 border-t border-border/40">
 				<Link
 					href="/"
-					className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1.5 transition-colors"
+					className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-secondary/60 transition-colors"
 				>
-					← Lihat Storefront Publik
+					<Home className="h-3.5 w-3.5 text-primary" />
+					<span>Beranda Marketplace</span>
 				</Link>
 				<button
 					type="button"
-					onClick={() => signOut()}
-					className="flex items-center gap-2 text-xs font-medium text-destructive hover:bg-destructive/10 px-2 py-1.5 rounded-md transition-colors w-full text-left"
+					onClick={async () => {
+						toast.info("Anda telah keluar dari akun");
+						await signOut();
+						window.location.href = "/";
+					}}
+					className="flex items-center gap-2 text-xs font-medium text-destructive hover:bg-destructive/10 px-2 py-1.5 rounded-md transition-colors w-full text-left cursor-pointer"
 				>
 					<LogOut className="h-3.5 w-3.5" />
 					<span>Keluar Admin</span>

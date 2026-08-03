@@ -9,6 +9,7 @@
 import { CheckCircle, Clock, ShoppingBag, Truck } from "lucide-react";
 import { redirect } from "next/navigation";
 import { updateOrderShippingAction } from "@/app/seller/actions";
+import { OrderStatusStepper } from "@/components/order-status-stepper";
 import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,63 +58,68 @@ export default async function SellerOrdersPage() {
 							{subOrders.map(({ subOrder, buyer }) => (
 								<div
 									key={subOrder.id}
-									className="p-4 rounded-lg border border-border/60 bg-card flex flex-col md:flex-row md:items-center justify-between gap-4"
+									className="p-5 rounded-xl border border-border/60 bg-card space-y-4 shadow-sm"
 								>
-									{/* Order Info */}
-									<div className="space-y-1.5">
-										<div className="flex items-center gap-2">
-											<span className="font-mono text-sm font-bold text-foreground">
-												#{subOrder.id.slice(0, 8)}
-											</span>
-											<StatusBadge status={subOrder.status} />
-										</div>
-										<p className="text-xs text-muted-foreground">
-											Pembeli: <strong className="text-foreground">{buyer?.name || "Pembeli"}</strong> (
-											{buyer?.email})
-										</p>
-										<p className="text-xs text-muted-foreground">
-											Subtotal Produk:{" "}
-											<strong className="text-foreground">
-												{formatMoney({
-													amount: subOrder.subtotal,
-													currency: "IDR",
-													locale: "id-ID",
-												})}
-											</strong>
-										</p>
-										{subOrder.trackingNumber && (
-											<p className="text-xs text-emerald-600 font-mono">
-												No. Resi: {subOrder.trackingNumber}
-											</p>
-										)}
-									</div>
+									{/* Top Stepper */}
+									<OrderStatusStepper status={subOrder.status} />
 
-									{/* Shipping Status Action Form */}
-									<ActionForm
-										action={updateOrderShippingAction}
-										className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-border/40"
-									>
-										<input type="hidden" name="subOrderId" value={subOrder.id} />
-										<Input
-											name="trackingNumber"
-											placeholder="Nomor Resi (JNE/J&T...)"
-											defaultValue={subOrder.trackingNumber || ""}
-											className="w-44 text-xs h-9"
-										/>
-										<select
-											name="status"
-											defaultValue={subOrder.status}
-											className="h-9 rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+									{/* Order Info & Form */}
+									<div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2 border-t border-border/40">
+										<div className="space-y-1">
+											<div className="flex items-center gap-2">
+												<span className="font-mono text-sm font-bold text-foreground">
+													#{subOrder.id.slice(0, 8)}
+												</span>
+												<StatusBadge status={subOrder.status} />
+											</div>
+											<p className="text-xs text-muted-foreground">
+												Pembeli: <strong className="text-foreground">{buyer?.name || "Pembeli"}</strong> (
+												{buyer?.email})
+											</p>
+											<p className="text-xs text-muted-foreground">
+												Subtotal Produk:{" "}
+												<strong className="text-foreground">
+													{formatMoney({
+														amount: subOrder.subtotal,
+														currency: "IDR",
+														locale: "id-ID",
+													})}
+												</strong>
+											</p>
+											{subOrder.trackingNumber && (
+												<p className="text-xs text-emerald-600 font-mono font-semibold">
+													No. Resi: {subOrder.trackingNumber}
+												</p>
+											)}
+										</div>
+
+										{/* Shipping Status Action Form */}
+										<ActionForm
+											action={updateOrderShippingAction}
+											className="flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-border/40"
 										>
-											<option value="pending_payment">Belum Bayar</option>
-											<option value="processing">Diproses</option>
-											<option value="shipped">Dikirim</option>
-											<option value="completed">Selesai</option>
-										</select>
-										<SubmitButton loadingText="..." variant="secondary" className="h-9 text-xs">
-											Update Status
-										</SubmitButton>
-									</ActionForm>
+											<input type="hidden" name="subOrderId" value={subOrder.id} />
+											<Input
+												name="trackingNumber"
+												placeholder="Nomor Resi (JNE/J&T...)"
+												defaultValue={subOrder.trackingNumber || ""}
+												className="w-44 text-xs h-9"
+											/>
+											<select
+												name="status"
+												defaultValue={subOrder.status}
+												className="h-9 rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+											>
+												<option value="pending_payment">Belum Bayar</option>
+												<option value="processing">Diproses</option>
+												<option value="shipped">Dikirim</option>
+												<option value="completed">Selesai</option>
+											</select>
+											<SubmitButton loadingText="..." variant="secondary" className="h-9 text-xs">
+												Update Status
+											</SubmitButton>
+										</ActionForm>
+									</div>
 								</div>
 							))}
 						</div>

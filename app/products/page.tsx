@@ -4,16 +4,17 @@ import { Suspense } from "react";
 import { ProductCard } from "@/components/product-card";
 import { ProductFilters, ProductFiltersMobile } from "@/components/sections/product-filters";
 import { commerce } from "@/lib/commerce";
+import { ProductQuickFilters } from "./product-quick-filters";
 import { ProductsPagination } from "./products-pagination";
 import { SortLinks, SortSelect } from "./products-sort-select";
 
 const PRODUCTS_PER_PAGE = 12;
 
 const sortOptions = [
-	{ value: "newest", label: "Newest", orderBy: "createdAt", orderDirection: "desc" },
-	{ value: "price-asc", label: "Price: Low to High", orderBy: "price", orderDirection: "asc" },
-	{ value: "price-desc", label: "Price: High to Low", orderBy: "price", orderDirection: "desc" },
-	{ value: "name", label: "Name: A–Z", orderBy: "name", orderDirection: "asc" },
+	{ value: "newest", label: "Terbaru", orderBy: "createdAt", orderDirection: "desc" },
+	{ value: "price-asc", label: "Harga: Rendah ke Tinggi", orderBy: "price", orderDirection: "asc" },
+	{ value: "price-desc", label: "Harga: Tinggi ke Rendah", orderBy: "price", orderDirection: "desc" },
+	{ value: "name", label: "Nama: A–Z", orderBy: "name", orderDirection: "asc" },
 ] as const;
 
 type ProductFilterParams = {
@@ -33,6 +34,17 @@ async function getFilterFacets() {
 	return commerce.productFilters();
 }
 
+async function getCollections() {
+	"use cache";
+	cacheLife("hours");
+	try {
+		const result = await commerce.collectionBrowse({ limit: 10 });
+		return result.data.map((c) => ({ slug: c.slug, name: c.name }));
+	} catch {
+		return [];
+	}
+}
+
 export async function generateMetadata({
 	searchParams,
 }: {
@@ -41,16 +53,16 @@ export async function generateMetadata({
 	const { page } = await searchParams;
 	const pageNum = Math.max(1, Number(page) || 1);
 	const canonical = pageNum > 1 ? `/products?page=${pageNum}` : "/products";
-	const title = pageNum > 1 ? `All Products — Page ${pageNum}` : "All Products";
+	const title = pageNum > 1 ? `Katalog Produk — Halaman ${pageNum}` : "Katalog Produk";
 
 	return {
 		title,
-		description: "Browse our complete product collection.",
+		description: "Jelajahi seluruh koleksi produk Ivet Mart.",
 		alternates: { canonical },
 		openGraph: {
 			type: "website",
 			title,
-			description: "Browse our complete product collection.",
+			description: "Jelajahi seluruh koleksi produk Ivet Mart.",
 			url: canonical,
 		},
 	};
@@ -83,7 +95,7 @@ async function ProductList({ filters }: { filters: ProductFilterParams }) {
 	if (result.data.length === 0) {
 		return (
 			<div className="py-24 text-center">
-				<p className="text-lg text-muted-foreground">No products match these filters.</p>
+				<p className="text-lg text-muted-foreground">Tidak ada produk yang sesuai filter.</p>
 			</div>
 		);
 	}
@@ -128,7 +140,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 	// `facets` is cached and independent of `searchParams`, so it can drive the layout
 	// shell without making the route blocking. Runtime `searchParams` is read inside the
 	// Suspense boundary below (see `ProductSection`).
-	const facets = await getFilterFacets();
+	const [facets, collections] = await Promise.all([getFilterFacets(), getCollections()]);
 	const filtersAvailable =
 		facets.categories.length > 0 ||
 		facets.collections.length > 0 ||
@@ -138,10 +150,14 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-			<div className="mb-10">
-				<h1 className="text-3xl sm:text-4xl font-medium tracking-tight">All Products</h1>
-				<p className="mt-2 text-muted-foreground">Browse our complete collection</p>
+			<div className="mb-6">
+				<h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Katalog Produk</h1>
+				<p className="mt-2 text-muted-foreground">Jelajahi seluruh koleksi produk Ivet Mart</p>
 			</div>
+
+			<Suspense>
+				<ProductQuickFilters collections={collections} />
+			</Suspense>
 
 			<div className={filtersAvailable ? "lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10" : ""}>
 				{filtersAvailable && <ProductFilters facets={facets} />}
@@ -155,7 +171,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
 					{/* Desktop toolbar: inline sort links (filters live in the sidebar). */}
 					<div className="mb-8 hidden flex-wrap items-center gap-3 lg:flex">
-						<span className="text-sm text-muted-foreground">Sort by:</span>
+						<span className="text-sm text-muted-foreground">Urutkan:</span>
 						<SortLinks options={sortOptions} />
 					</div>
 

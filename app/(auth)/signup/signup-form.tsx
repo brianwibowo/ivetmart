@@ -2,17 +2,17 @@
  * Signup Form — Ivet Mart
  *
  * Registration form with role selection (Pembeli / Penjual).
- * After signup, redirects based on selected role.
+ * Premium split-screen styled authentication.
  */
 
 "use client";
 
-import { ShoppingBag, Store } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Lock, Mail, ShoppingBag, Store, User, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signUp } from "@/lib/auth-client";
@@ -23,6 +23,7 @@ export function SignupForm() {
 	const router = useRouter();
 	const [error, setError] = useState<string | null>(null);
 	const [pending, setPending] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 	const [role, setRole] = useState<Role>("buyer");
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,141 +47,173 @@ export function SignupForm() {
 			} as Parameters<typeof signUp.email>[0]);
 
 			if (result.error) {
-				setError(result.error.message ?? "Gagal membuat akun");
+				const errMsg = result.error.message ?? "Gagal membuat akun";
+				setError(errMsg);
+				toast.error(errMsg);
 				setPending(false);
 				return;
 			}
 		} catch {
-			setError("Terjadi kesalahan. Silakan coba lagi.");
+			const errMsg = "Terjadi kesalahan. Silakan coba lagi.";
+			setError(errMsg);
+			toast.error(errMsg);
 			setPending(false);
 			return;
 		}
 
-		// Redirect based on role
+		toast.success("Akun Anda berhasil dibuat!");
 		const target = role === "seller" ? "/seller/register" : "/";
 		router.push(target);
 		router.refresh();
 	};
 
 	return (
-		<Card className="rounded-3xl border-border/80 bg-white/95 p-2 shadow-xl backdrop-blur-md">
-			<CardHeader className="space-y-1 text-center pb-4">
-				<CardTitle className="text-2xl font-bold tracking-tight text-foreground">Buat Akun Baru</CardTitle>
-				<CardDescription className="text-sm text-muted-foreground">
-					Daftar untuk mulai berbelanja atau berjualan di Ivet Mart.
-				</CardDescription>
-			</CardHeader>
-			<form onSubmit={handleSubmit}>
-				<CardContent className="space-y-4 pt-2">
-					{error && (
-						<div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 p-3.5 text-sm text-destructive font-medium animate-in fade-in slide-in-from-top-1">
-							<span>⚠️</span>
-							<span>{error}</span>
-						</div>
-					)}
+		<div className="w-full space-y-6">
+			{/* Header Title */}
+			<div className="space-y-2 text-left">
+				<div className="inline-flex items-center gap-2 rounded-full bg-[#F7E6E6] px-3 py-1 text-xs font-bold text-[#80070A]">
+					<UserPlus className="h-3.5 w-3.5" />
+					<span>PENDAFTARAN AKUN</span>
+				</div>
+				<h2 className="yns-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+					Buat Akun Baru
+				</h2>
+				<p className="text-sm text-muted-foreground leading-relaxed">
+					Daftar dalam hitungan detik untuk mulai berbelanja atau membuka toko online Anda.
+				</p>
+			</div>
 
-					{/* Role Selection */}
-					<div className="space-y-1.5">
-						<Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-							Daftar sebagai
-						</Label>
-						<div className="grid grid-cols-2 gap-3">
-							<RoleCard
-								icon={<ShoppingBag className="h-4 w-4" />}
-								label="Pembeli"
-								description="Belanja produk khas"
-								selected={role === "buyer"}
-								onClick={() => setRole("buyer")}
-							/>
-							<RoleCard
-								icon={<Store className="h-4 w-4" />}
-								label="Penjual"
-								description="Buka toko online"
-								selected={role === "seller"}
-								onClick={() => setRole("seller")}
-							/>
-						</div>
+			{/* Form Container */}
+			<form onSubmit={handleSubmit} className="space-y-4">
+				{error && (
+					<div className="flex items-center gap-3 rounded-2xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive font-semibold animate-in fade-in slide-in-from-top-1">
+						<AlertCircle className="h-5 w-5 shrink-0" />
+						<span>{error}</span>
 					</div>
+				)}
 
-					<div className="space-y-1.5">
-						<Label
-							htmlFor="signup-name"
-							className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-						>
-							Nama Lengkap
-						</Label>
+				{/* Role Selector Cards */}
+				<div className="space-y-2">
+					<Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+						Daftar Sebagai
+					</Label>
+					<div className="grid grid-cols-2 gap-3">
+						<RoleCard
+							icon={<ShoppingBag className="h-4 w-4" />}
+							label="Pembeli"
+							description="Belanja produk khas"
+							selected={role === "buyer"}
+							onClick={() => setRole("buyer")}
+						/>
+						<RoleCard
+							icon={<Store className="h-4 w-4" />}
+							label="Penjual"
+							description="Buka toko online"
+							selected={role === "seller"}
+							onClick={() => setRole("seller")}
+						/>
+					</div>
+				</div>
+
+				{/* Full Name Field */}
+				<div className="space-y-1.5">
+					<Label
+						htmlFor="signup-name"
+						className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+					>
+						Nama Lengkap
+					</Label>
+					<div className="relative">
+						<User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
 						<Input
 							id="signup-name"
 							name="name"
 							type="text"
 							placeholder="Nama lengkap Anda"
 							required
-							className="h-11 rounded-xl border-border/80 bg-secondary/30 px-3.5 focus-visible:bg-white focus-visible:ring-[#80070A]/30"
+							className="h-12 rounded-2xl border border-border/80 bg-white pl-12 pr-4 text-foreground text-sm shadow-sm transition-all focus-visible:border-[#80070A] focus-visible:ring-2 focus-visible:ring-[#80070A]/20"
 						/>
 					</div>
-					<div className="space-y-1.5">
-						<Label
-							htmlFor="signup-email"
-							className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-						>
-							Email
-						</Label>
+				</div>
+
+				{/* Email Field */}
+				<div className="space-y-1.5">
+					<Label
+						htmlFor="signup-email"
+						className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+					>
+						Email
+					</Label>
+					<div className="relative">
+						<Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
 						<Input
 							id="signup-email"
 							name="email"
 							type="email"
 							placeholder="nama@email.com"
 							required
-							className="h-11 rounded-xl border-border/80 bg-secondary/30 px-3.5 focus-visible:bg-white focus-visible:ring-[#80070A]/30"
+							className="h-12 rounded-2xl border border-border/80 bg-white pl-12 pr-4 text-foreground text-sm shadow-sm transition-all focus-visible:border-[#80070A] focus-visible:ring-2 focus-visible:ring-[#80070A]/20"
 						/>
 					</div>
-					<div className="space-y-1.5">
-						<Label
-							htmlFor="signup-password"
-							className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-						>
-							Kata Sandi
-						</Label>
+				</div>
+
+				{/* Password Field */}
+				<div className="space-y-1.5">
+					<Label
+						htmlFor="signup-password"
+						className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+					>
+						Kata Sandi
+					</Label>
+					<div className="relative">
+						<Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
 						<Input
 							id="signup-password"
 							name="password"
-							type="password"
+							type={showPassword ? "text" : "password"}
 							placeholder="Minimal 6 karakter"
 							minLength={6}
 							required
 							autoComplete="new-password"
-							className="h-11 rounded-xl border-border/80 bg-secondary/30 px-3.5 focus-visible:bg-white focus-visible:ring-[#80070A]/30"
+							className="h-12 rounded-2xl border border-border/80 bg-white pl-12 pr-12 text-foreground text-sm shadow-sm transition-all focus-visible:border-[#80070A] focus-visible:ring-2 focus-visible:ring-[#80070A]/20"
 						/>
+						<button
+							type="button"
+							onClick={() => setShowPassword(!showPassword)}
+							className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/70 hover:text-foreground transition-colors"
+						>
+							{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+						</button>
 					</div>
-				</CardContent>
-				<CardFooter className="flex flex-col gap-4 pt-4">
-					<Button
-						type="submit"
-						className="h-11 w-full rounded-xl bg-[#80070A] text-white font-semibold shadow-md transition-all hover:bg-[#600507] hover:shadow-lg disabled:opacity-50"
-						disabled={pending}
-					>
-						{pending ? (
-							<span className="flex items-center gap-2">
-								<span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-								Membuat Akun...
-							</span>
-						) : (
-							"Daftar Sekarang"
-						)}
-					</Button>
-					<p className="text-center text-sm text-muted-foreground">
-						Sudah memiliki akun?{" "}
-						<Link href="/login" className="font-semibold text-[#80070A] underline-offset-4 hover:underline">
-							Masuk Ke Akun
-						</Link>
-					</p>
-				</CardFooter>
+				</div>
+
+				{/* Submit Button */}
+				<Button
+					type="submit"
+					className="h-13 w-full rounded-2xl bg-gradient-to-r from-[#80070A] to-[#A31215] text-white font-bold text-base shadow-xl shadow-[#80070A]/25 transition-all hover:from-[#600507] hover:to-[#80070A] hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] disabled:opacity-50 mt-2"
+					disabled={pending}
+				>
+					{pending ? (
+						<span className="flex items-center gap-2">
+							<span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+							Memproses Pendaftaran...
+						</span>
+					) : (
+						"Daftar Sekarang"
+					)}
+				</Button>
+
+				{/* Login Footer Link */}
+				<p className="text-center text-sm text-muted-foreground pt-2">
+					Sudah memiliki akun?{" "}
+					<Link href="/login" className="font-bold text-[#80070A] underline-offset-4 hover:underline">
+						Masuk Ke Akun
+					</Link>
+				</p>
 			</form>
-		</Card>
+		</div>
 	);
 }
-
-// ─── Role Selection Card ────────────────────────────────
 
 function RoleCard({
 	icon,
@@ -199,19 +232,23 @@ function RoleCard({
 		<button
 			type="button"
 			onClick={onClick}
-			className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 text-center transition-all ${
+			className={`flex items-center gap-3 rounded-2xl border-2 p-3 text-left transition-all ${
 				selected
-					? "border-[#80070A] bg-[#80070A]/5 text-[#80070A] shadow-sm font-semibold"
-					: "border-border/80 bg-secondary/30 text-muted-foreground hover:border-[#80070A]/40 hover:bg-secondary/60"
+					? "border-[#80070A] bg-white text-[#80070A] shadow-md ring-1 ring-[#80070A]/20"
+					: "border-border/70 bg-white/70 text-muted-foreground hover:border-[#80070A]/40 hover:bg-white"
 			}`}
 		>
 			<div
-				className={`p-2 rounded-full ${selected ? "bg-[#80070A] text-white" : "bg-muted text-muted-foreground"}`}
+				className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
+					selected ? "bg-[#80070A] text-white" : "bg-slate-100 text-muted-foreground"
+				}`}
 			>
 				{icon}
 			</div>
-			<span className="text-xs font-semibold">{label}</span>
-			<span className="text-[10px] opacity-75">{description}</span>
+			<div>
+				<h4 className="text-xs font-bold leading-tight">{label}</h4>
+				<p className="text-[10px] text-muted-foreground">{description}</p>
+			</div>
 		</button>
 	);
 }

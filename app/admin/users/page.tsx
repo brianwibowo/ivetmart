@@ -5,8 +5,9 @@
  * Uses ActionForm + SubmitButton for toast feedback & double-click prevention.
  */
 
-import { count, desc } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { Shield, UserCheck, UserX } from "lucide-react";
+import Link from "next/link";
 import { toggleUserStatusAction } from "@/app/admin/actions";
 import { ActionForm } from "@/components/ui/action-form";
 import { Badge } from "@/components/ui/badge";
@@ -17,23 +18,36 @@ import { requireAdmin } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 
-export default async function AdminUsersPage(props: { searchParams?: Promise<{ page?: string }> }) {
+export default async function AdminUsersPage(props: {
+	searchParams?: Promise<{ page?: string; role?: string }>;
+}) {
 	await requireAdmin();
 	const searchParams = await props.searchParams;
 	const currentPage = Number.parseInt(searchParams?.page || "1", 10);
+	const targetRole = searchParams?.role || "";
 	const pageSize = 10;
 	const offset = (currentPage - 1) * pageSize;
 
-	const [totalCountRes] = await db.select({ count: count() }).from(user);
+	const whereClause = targetRole ? eq(user.role, targetRole) : undefined;
+
+	const [totalCountRes] = await db.select({ count: count() }).from(user).where(whereClause);
 	const totalItems = Number(totalCountRes?.count ?? 0);
 	const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
 	const pagedUsers = await db
 		.select()
 		.from(user)
+		.where(whereClause)
 		.orderBy(desc(user.createdAt))
 		.limit(pageSize)
 		.offset(offset);
+
+	const roleFilters = [
+		{ label: "Semua Role", value: "" },
+		{ label: "👑 Admin", value: "admin" },
+		{ label: "🏪 Penjual", value: "seller" },
+		{ label: "🛍️ Pembeli", value: "buyer" },
+	];
 
 	return (
 		<div className="space-y-6">
@@ -46,8 +60,33 @@ export default async function AdminUsersPage(props: { searchParams?: Promise<{ p
 
 			<Card className="border-border/60">
 				<CardHeader>
-					<CardTitle className="text-lg">Katalog Akun Pengguna</CardTitle>
-					<CardDescription>Total {totalItems} pengguna terdaftar di database.</CardDescription>
+					<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+						<div>
+							<CardTitle className="text-lg">Katalog Akun Pengguna</CardTitle>
+							<CardDescription>Total {totalItems} pengguna terdaftar di database.</CardDescription>
+						</div>
+
+						{/* Role Filter Tabs */}
+						<div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+							{roleFilters.map((rf) => {
+								const active = targetRole === rf.value;
+								const href = rf.value ? `/admin/users?role=${rf.value}` : "/admin/users";
+								return (
+									<Link
+										key={rf.value}
+										href={href}
+										className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+											active
+												? "bg-[#80070A] text-white shadow-sm"
+												: "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/40"
+										}`}
+									>
+										{rf.label}
+									</Link>
+								);
+							})}
+						</div>
+					</div>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="overflow-x-auto">

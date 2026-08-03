@@ -11,6 +11,7 @@
 import { Loader2, LogOut, ShieldCheck, ShoppingBag, Store, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,9 +41,8 @@ export function AuthButton() {
 		return (
 			<Button
 				variant="outline"
-				size="sm"
 				asChild
-				className="font-semibold text-xs sm:text-sm border-[#80070A]/40 text-[#80070A] hover:bg-[#80070A]/10"
+				className="h-10 px-5 rounded-full border border-[#80070A]/50 text-[#80070A] hover:bg-[#80070A]/10 transition-all text-sm font-semibold shadow-xs"
 			>
 				<Link href="/login">Masuk</Link>
 			</Button>
@@ -53,9 +53,9 @@ export function AuthButton() {
 	const role = (session.user as { role?: string })?.role || "buyer";
 
 	const handleSignOut = async () => {
+		toast.info("Anda telah keluar dari akun");
 		await signOut();
-		router.push("/");
-		router.refresh();
+		window.location.href = "/";
 	};
 
 	return (
