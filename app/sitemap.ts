@@ -30,12 +30,12 @@ async function getAllLegalPages() {
 
 async function getContactFormEnabled() {
 	const me = await meGetCached().catch(() => null);
-	return me?.store.settings?.enabledTools?.contactForm ?? false;
+	return me?.store?.settings?.enabledTools?.contactForm ?? false;
 }
 
 async function getBlogState() {
 	const me = await meGetCached().catch(() => null);
-	if (!me?.store.settings?.enabledTools?.blog) {
+	if (!me?.store?.settings?.enabledTools?.blog) {
 		return { enabled: false, posts: [] as { slug: string; lastModified: string }[] };
 	}
 	const result = await commerce.postBrowse({ active: true, limit: 200 }).catch(() => ({ data: [] }));

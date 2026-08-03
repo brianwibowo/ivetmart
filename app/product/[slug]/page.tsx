@@ -80,10 +80,12 @@ export default async function ProductPage(props: { params: Promise<{ slug: strin
 const ProductDetails = async ({ params }: { params: Promise<{ slug: string }> }) => {
 	const { slug } = await params;
 	const me = await meGetCached().catch(() => null);
-	const reviewsEnabled = me?.store.settings?.enabledTools?.reviews ?? false;
+	const reviewsEnabled = me?.store?.settings?.enabledTools?.reviews ?? false;
 	const [product, reviews] = await Promise.all([
-		commerce.productGet({ idOrSlug: slug }),
-		reviewsEnabled ? commerce.productReviewsBrowse({ idOrSlug: slug }, { limit: 20 }) : Promise.resolve(null),
+		commerce.productGet({ idOrSlug: slug }).catch(() => null),
+		reviewsEnabled
+			? commerce.productReviewsBrowse({ idOrSlug: slug }, { limit: 20 }).catch(() => null)
+			: Promise.resolve(null),
 	]);
 
 	if (!product) {
@@ -92,9 +94,11 @@ const ProductDetails = async ({ params }: { params: Promise<{ slug: string }> })
 
 	const reviewSummary = reviews?.summary ?? null;
 
+	const productImages = product.images || [];
+	const productVariants = product.variants || [];
 	const allImages = [
-		...product.images,
-		...product.variants.flatMap((v) => v.images).filter((img) => !product.images.includes(img)),
+		...productImages,
+		...productVariants.flatMap((v) => v.images || []).filter((img) => !productImages.includes(img)),
 	];
 
 	const productJsonLd = await buildProductJsonLd(product, reviews);

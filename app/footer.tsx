@@ -9,7 +9,7 @@ async function FooterBlogLink() {
 	cacheLife("hours");
 
 	const me = await meGetCached().catch(() => null);
-	if (!me?.store.settings?.enabledTools?.blog) {
+	if (!me?.store?.settings?.enabledTools?.blog) {
 		return null;
 	}
 
@@ -31,7 +31,7 @@ async function FooterContactLink() {
 	cacheLife("hours");
 
 	const me = await meGetCached().catch(() => null);
-	if (!me?.store.settings?.enabledTools?.contactForm) {
+	if (!me?.store?.settings?.enabledTools?.contactForm) {
 		return null;
 	}
 
