@@ -14,7 +14,7 @@ export function CartButton() {
 			aria-label="Shopping cart"
 		>
 			<ShoppingCart className="w-4 h-4" />
-			<span className="hidden sm:inline">Cart</span>
+			<span className="hidden sm:inline">Keranjang</span>
 			<span
 				aria-live="polite"
 				className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#F8C300] text-[#80070A] text-[11px] font-bold"

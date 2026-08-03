@@ -16,9 +16,13 @@ export function StorefrontWrapper({
 	referralBadge: React.ReactNode;
 }) {
 	const pathname = usePathname();
-	const isDashboard = pathname.startsWith("/admin") || pathname.startsWith("/seller");
+	const isStandalone =
+		pathname.startsWith("/admin") ||
+		pathname.startsWith("/seller") ||
+		pathname.startsWith("/login") ||
+		pathname.startsWith("/signup");
 
-	if (isDashboard) {
+	if (isStandalone) {
 		return <div className="flex min-h-screen flex-col bg-background">{children}</div>;
 	}
 
