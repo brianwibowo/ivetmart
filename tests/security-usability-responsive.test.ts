@@ -86,13 +86,15 @@ test("SECURITY 5: Non-seller calling createProductAction is rejected by requireS
 // ─── 2. USABILITY & NETWORK RESILIENCE ────────────────────────
 
 test("USABILITY: Database queries handle slow/failing network gracefully without 500 crash", async () => {
-	const stats = await getAdminDashboardStats();
-	const pending = await getPendingSellers();
-	const cats = await getAllCategoriesWithCounts();
-	const products = await getActiveProducts();
-	const sellerStore = await getSellerStoreByUserId("dummy-user");
-	const sellerStats = await getSellerStats("dummy-store");
-	const sellerProds = await getSellerProducts("dummy-store");
+	const [stats, pending, cats, products, sellerStore, sellerStats, sellerProds] = await Promise.all([
+		getAdminDashboardStats(),
+		getPendingSellers(),
+		getAllCategoriesWithCounts(),
+		getActiveProducts(),
+		getSellerStoreByUserId("dummy-user"),
+		getSellerStats("dummy-store"),
+		getSellerProducts("dummy-store"),
+	]);
 
 	// All functions must return valid safe data structures, never throwing unhandled 500 exceptions
 	expect(typeof stats.totalUsers).toBe("number");
