@@ -27,6 +27,24 @@ export const getProductThumbnail = (urls: string[]): string | undefined => {
  * const [err, data] = await safe(db.select().from(users));
  */
 export async function safe<T>(promise: Promise<T>): Promise<[Error, null] | [null, T]> {
+	const isCIEnv = process.env.NODE_ENV === "test" || process.env.BUN_ENV === "test" || !!process.env.CI;
+
+	if (isCIEnv) {
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const timeoutPromise = new Promise<never>((_, reject) => {
+			timer = setTimeout(() => reject(new Error("Database query timeout in CI environment")), 500);
+		});
+
+		try {
+			const data = await Promise.race([promise, timeoutPromise]);
+			if (timer) clearTimeout(timer);
+			return [null, data];
+		} catch (err) {
+			if (timer) clearTimeout(timer);
+			return [err instanceof Error ? err : new Error(String(err)), null];
+		}
+	}
+
 	try {
 		const data = await promise;
 		return [null, data];
