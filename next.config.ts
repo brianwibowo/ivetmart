@@ -46,7 +46,20 @@ const nextConfig: NextConfig = {
 		remotePatterns: [{ protocol: "https", hostname: "**" }],
 	},
 	async headers() {
-		if (isProd) return [];
+		// ── Production Security Headers ──────────────────────────
+		const securityHeaders = [
+			{ key: "X-Frame-Options", value: "DENY" },
+			{ key: "X-Content-Type-Options", value: "nosniff" },
+			{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+			{ key: "X-DNS-Prefetch-Control", value: "on" },
+			{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+			{ key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+		];
+
+		if (isProd) {
+			return [{ source: "/:path*", headers: securityHeaders }];
+		}
+
 		// Dev-only: AI Builder renders this app in an iframe, and Chrome's HTTP cache
 		// holds stale sub-resources inside iframes — HMR fires but the preview never
 		// sees it. See https://github.com/vercel/next.js/issues/90143.

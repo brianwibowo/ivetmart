@@ -17,6 +17,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Setup Bun Environment
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Quality Gate — Biome Lint Check
+        run: bun run lint
+
+      - name: Quality Gate — Run Automated Unit Tests
+        run: bun test
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -58,12 +72,13 @@ jobs:
             # 1. Create Docker network if not existing
             docker network create ivetmart-net || true
 
-            # 2. Check & auto-create Postgres DB container if not running
+            # 2. Check & auto-create Postgres DB container with PERSISTENT NAMED VOLUME
             if ! docker ps -a --format '{{.Names}}' | grep -q '^ivetmart-db$'; then
               docker run -d \
                 --name ivetmart-db \
                 --restart always \
                 --network ivetmart-net \
+                -v ivetmart_pgdata:/var/lib/postgresql/data \
                 -e POSTGRES_USER=postgres \
                 -e POSTGRES_PASSWORD=ivetmart_db_password_2026 \
                 -e POSTGRES_DB=ivetmart \
@@ -94,4 +109,5 @@ jobs:
             docker exec ivetmart-web bun run db:push --force || true
             docker exec ivetmart-web bun run db:seed || true
 
-            docker system prune -f
+            # Clean dangling images only (preserve volumes)
+            docker image prune -f

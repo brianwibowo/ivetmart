@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
 import { addresses, cartItems, orderItems, orderSellers, orders, products, variants } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import { safe } from "@/lib/utils";
 
 type ActionResult = { success: boolean; message: string };
@@ -58,6 +59,7 @@ export async function createAddressAction(_prev: ActionResult, formData: FormDat
 	);
 
 	if (err) {
+		logger.error("createAddressAction failed", { userId, error: String(err) });
 		return { success: false, message: "Gagal menyimpan alamat pengiriman." };
 	}
 
@@ -82,6 +84,7 @@ export async function deleteAddressAction(_prev: ActionResult, formData: FormDat
 	);
 
 	if (err) {
+		logger.error("deleteAddressAction failed", { userId: session.user.id, addressId, error: String(err) });
 		return { success: false, message: "Gagal menghapus alamat." };
 	}
 
@@ -98,9 +101,12 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 	const buyerId = session.user.id;
 
 	const cartId = formData.get("cartId") as string;
-	const addressId = formData.get("addressId") as string;
-	const paymentMethod = (formData.get("paymentMethod") as string) || "transfer_bca";
+	const addressId = (formData.get("addressId") as string) || null;
+	const paymentMethod = (formData.get("paymentMethod") as string) || "manual_bca";
 	const notes = (formData.get("notes") as string) || null;
+	const idempotencyKey = (formData.get("idempotencyKey") as string) || null;
+
+	logger.info("createOrderAction initiated", { buyerId, cartId, idempotencyKey });
 
 	if (!cartId) {
 		throw new Error("Keranjang belanja kosong.");
@@ -188,6 +194,7 @@ export async function createOrderAction(formData: FormData): Promise<void> {
 	);
 
 	if (err) {
+		logger.error("createOrderAction failed", { buyerId, cartId, error: String(err) });
 		throw new Error("Gagal membuat pesanan.");
 	}
 

@@ -94,6 +94,7 @@ export default async function CheckoutPage() {
 
 			<form action={createOrderAction} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<input type="hidden" name="cartId" value={cartId} />
+				<input type="hidden" name="idempotencyKey" value={crypto.randomUUID()} />
 
 				{/* Left Column (2 cols) — Address & Items */}
 				<div className="lg:col-span-2 space-y-6">

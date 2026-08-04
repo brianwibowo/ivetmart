@@ -1,44 +1,106 @@
 /**
- * Proxy — Ivet Mart (Next.js 16 convention, replaces middleware.ts)
+ * Rate Limiting Middleware — Ivet Mart
  *
- * Handles:
- * 1. Route protection — redirect unauthenticated users from protected routes
- * 2. Auth page redirect — redirect logged-in users away from login/signup
+ * In-memory sliding window rate limiter for sensitive routes.
+ * No external dependencies (no Redis required).
  *
- * Role-based access is enforced server-side in layouts (via auth-guard.ts).
+ * Limits:
+ *   /api/auth/*       → 10 req/min per IP (login, signup)
+ *   /checkout          → 5  req/min per IP
+ *   /seller/register   → 3  req/min per IP
  */
 
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-/** Routes that require authentication (any role) */
-const PROTECTED_PREFIXES = ["/account", "/seller", "/admin", "/checkout"];
+// ─── Rate Limit Configuration ───────────────────────────
+type RateLimitRule = {
+	windowMs: number;
+	maxRequests: number;
+};
 
-/** Routes that should redirect if already authenticated */
-const AUTH_PAGES = ["/login", "/signup"];
+const RATE_LIMIT_RULES: [string, RateLimitRule][] = [
+	["/api/auth", { windowMs: 60_000, maxRequests: 10 }],
+	["/checkout", { windowMs: 60_000, maxRequests: 5 }],
+	["/seller/register", { windowMs: 60_000, maxRequests: 3 }],
+];
 
-export async function proxy(request: NextRequest) {
-	const { pathname } = request.nextUrl;
-	const sessionToken = request.cookies.get("better-auth.session_token");
-	const isLoggedIn = Boolean(sessionToken);
+// ─── In-Memory Store ────────────────────────────────────
+type RequestRecord = { count: number; resetAt: number };
+const ipStore = new Map<string, RequestRecord>();
 
-	// ─── Redirect logged-in users away from auth pages ────
-	const isAuthPage = AUTH_PAGES.some((page) => pathname.startsWith(page));
-	if (isAuthPage && isLoggedIn) {
-		return NextResponse.redirect(new URL("/", request.url));
+// Cleanup stale entries every 5 minutes to prevent memory leak
+const CLEANUP_INTERVAL = 5 * 60_000;
+let lastCleanup = Date.now();
+
+function cleanupStaleEntries() {
+	const now = Date.now();
+	if (now - lastCleanup < CLEANUP_INTERVAL) return;
+	lastCleanup = now;
+
+	const keysToDelete: string[] = [];
+	ipStore.forEach((record, key) => {
+		if (now > record.resetAt) {
+			keysToDelete.push(key);
+		}
+	});
+	keysToDelete.forEach((key) => ipStore.delete(key));
+}
+
+function isRateLimited(ip: string, rule: RateLimitRule): boolean {
+	cleanupStaleEntries();
+
+	const now = Date.now();
+	const key = ip;
+	const record = ipStore.get(key);
+
+	if (!record || now > record.resetAt) {
+		ipStore.set(key, { count: 1, resetAt: now + rule.windowMs });
+		return false;
 	}
 
-	// ─── Redirect unauthenticated users to login ──────────
-	const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-	if (isProtected && !isLoggedIn) {
-		const loginUrl = new URL("/login", request.url);
-		loginUrl.searchParams.set("callbackUrl", pathname);
-		return NextResponse.redirect(loginUrl);
+	record.count += 1;
+	return record.count > rule.maxRequests;
+}
+
+// ─── Middleware Entry ───────────────────────────────────
+export function proxy(request: NextRequest) {
+	const { pathname } = request.nextUrl;
+
+	// Find matching rate limit rule
+	const matchedRule = RATE_LIMIT_RULES.find(([prefix]) => pathname.startsWith(prefix));
+
+	if (matchedRule) {
+		const [prefix, rule] = matchedRule;
+		const ip =
+			request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+			request.headers.get("x-real-ip") ||
+			"unknown";
+
+		const rateLimitKey = `${ip}:${prefix}`;
+
+		if (isRateLimited(rateLimitKey, rule)) {
+			return NextResponse.json(
+				{
+					error: "Terlalu banyak permintaan",
+					message: "Anda telah melampaui batas permintaan. Silakan tunggu beberapa saat.",
+				},
+				{
+					status: 429,
+					headers: {
+						"Retry-After": String(Math.ceil(rule.windowMs / 1000)),
+					},
+				},
+			);
+		}
 	}
 
 	return NextResponse.next();
 }
 
+export function middleware(request: NextRequest) {
+	return proxy(request);
+}
+
 export const config = {
-	matcher: ["/account/:path*", "/seller/:path*", "/admin/:path*", "/checkout", "/login", "/signup"],
+	matcher: ["/api/auth/:path*", "/checkout", "/seller/register"],
 };

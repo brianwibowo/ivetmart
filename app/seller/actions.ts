@@ -15,6 +15,7 @@ import { requireAuth, requireSeller } from "@/lib/auth-guard";
 import { db } from "@/lib/db";
 import { getSellerStoreByUserId } from "@/lib/db/queries/seller";
 import { orderSellers, products, sellerStores, variants } from "@/lib/db/schema";
+import { logger } from "@/lib/logger";
 import { safe } from "@/lib/utils";
 
 type ActionResult = { success: boolean; message: string };
@@ -63,6 +64,7 @@ export async function registerSellerStoreAction(formData: FormData): Promise<voi
 	);
 
 	if (err) {
+		logger.error("registerSellerStoreAction failed", { userId, error: String(err) });
 		throw new Error("Gagal mendaftarkan toko. Silakan coba lagi.");
 	}
 
@@ -103,6 +105,7 @@ export async function updateStoreSettingsAction(
 	);
 
 	if (err) {
+		logger.error("updateStoreSettingsAction failed", { storeId: store.id, error: String(err) });
 		return { success: false, message: "Gagal memperbarui toko." };
 	}
 
@@ -163,6 +166,7 @@ export async function createProductAction(formData: FormData): Promise<void> {
 	);
 
 	if (err) {
+		logger.error("createProductAction failed", { storeId: store.id, error: String(err) });
 		throw new Error("Gagal menambahkan produk.");
 	}
 
@@ -201,6 +205,7 @@ export async function updateOrderShippingAction(
 	);
 
 	if (err) {
+		logger.error("updateOrderShippingAction failed", { storeId: store.id, subOrderId, error: String(err) });
 		return { success: false, message: "Gagal memperbarui status pesanan." };
 	}
 

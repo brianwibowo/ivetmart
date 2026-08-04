@@ -9,25 +9,28 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
 			className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center"
 			style={{ minHeight: "90vh" }}
 		>
-			<AlertCircleIcon className="size-16 text-muted-foreground/50" strokeWidth={1.5} />
-			<h1 className="mt-6 text-7xl font-bold tracking-tight">Error</h1>
-			<h2 className="mt-4 text-xl text-muted-foreground">Something went wrong</h2>
-			<p className="mt-2 text-sm text-muted-foreground">
-				An unexpected error occurred. Please try again or return to the store.
+			<AlertCircleIcon className="size-16 text-destructive/60" strokeWidth={1.5} />
+			<h1 className="mt-6 text-4xl font-bold tracking-tight font-serif text-foreground">
+				Terjadi Kendala Teknis
+			</h1>
+			<h2 className="mt-2 text-lg text-muted-foreground font-medium">Mohon Maaf, Ada Kesalahan Sementara</h2>
+			<p className="mt-2 text-sm text-muted-foreground max-w-md">
+				Sistem mengalami kendala tak terduga. Silakan coba muat ulang halaman atau kembali ke beranda Ivet
+				Mart.
 			</p>
 			<div className="mt-8 flex items-center gap-4">
 				<button
 					type="button"
 					onClick={reset}
-					className="inline-flex items-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+					className="inline-flex items-center rounded-full bg-[#80070A] hover:bg-[#680508] text-white px-5 py-2.5 text-sm font-semibold transition-all shadow-xs"
 				>
-					Try Again
+					Coba Muat Ulang
 				</button>
 				<YnsLink
 					href="/"
-					className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary"
+					className="inline-flex items-center rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-all hover:bg-secondary"
 				>
-					Continue Shopping
+					🏠 Beranda Marketplace
 				</YnsLink>
 			</div>
 		</div>

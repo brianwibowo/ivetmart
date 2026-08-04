@@ -1,53 +1,61 @@
+# ─── Ivet Mart — Production Docker Compose ───
+# Klien non-teknis cukup jalankan:
+#   docker compose up -d
+#
+# Struktur:
+#   ivetmart-db  → PostgreSQL 16 (data persisten via named volume)
+#   ivetmart-web → Next.js app (port 8095)
 
 services:
   db:
     image: postgres:16-alpine
     container_name: ivetmart-db
     restart: always
+    networks:
+      - ivetmart-net
     environment:
-      POSTGRES_DB: ivetmart
-      POSTGRES_USER: ivetmart
-      POSTGRES_PASSWORD: ivetmart_dev_2026
-    ports:
-      - "5433:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ivetmart_db_password_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-ivetmart}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ivetmart_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ivetmart -d ivetmart"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ivetmart}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - ivetmart-network
 
-  ivetmart-web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  web:
+    image: ghcr.io/brianwibowo/ivetmart:latest
     container_name: ivetmart-web
     restart: always
+    networks:
+      - ivetmart-net
     ports:
-      - "8095:3000"
+      - "${APP_PORT:-8095}:3000"
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - DATABASE_URL=postgresql://ivetmart:ivetmart_dev_2026@db:5432/ivetmart
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:ivetmart_db_password_2026@ivetmart-db:5432/ivetmart}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-ivetmart_secret_key_change_me_32chars}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-https://techno-ivetmart.id}
+      NEXT_PUBLIC_URL: ${NEXT_PUBLIC_URL:-https://techno-ivetmart.id}
+      YNS_API_KEY: ${YNS_API_KEY:-test_key}
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
-      interval: 15s
-      timeout: 5s
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 10s
-    networks:
-      - ivetmart-network
-
-volumes:
-  pgdata:
+      start_period: 15s
 
 networks:
-  ivetmart-network:
+  ivetmart-net:
     driver: bridge
+
+volumes:
+  ivetmart_pgdata:
+    name: ivetmart_pgdata
