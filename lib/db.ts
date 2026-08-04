@@ -18,8 +18,8 @@ const connectionString = process.env.DATABASE_URL || "postgres://build:build@loc
 const isTestEnv = process.env.NODE_ENV === "test" || process.env.BUN_ENV === "test" || !!process.env.CI;
 
 const client = postgres(connectionString, {
-	max: 10,
-	idle_timeout: 20,
+	max: isTestEnv ? 1 : 10,
+	idle_timeout: isTestEnv ? 1 : 20,
 	connect_timeout: isTestEnv ? 1 : 5,
 });
 
