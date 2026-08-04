@@ -11,48 +11,37 @@
 import { count, desc, eq, sum } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { categories, orders, products, sellerStores, user } from "@/lib/db/schema";
+import { safe } from "@/lib/utils";
 
 /**
  * Get overall admin dashboard statistics
  */
 export async function getAdminDashboardStats() {
-	try {
-		const [totalUsers] = await db.select({ count: count() }).from(user);
-		const [activeSellers] = await db
-			.select({ count: count() })
-			.from(sellerStores)
-			.where(eq(sellerStores.status, "active"));
-		const [pendingSellers] = await db
-			.select({ count: count() })
-			.from(sellerStores)
-			.where(eq(sellerStores.status, "pending"));
-		const [totalOrders] = await db.select({ count: count() }).from(orders);
-		const [totalRevenue] = await db.select({ total: sum(orders.totalAmount) }).from(orders);
+	const [err1, totalUsersRes] = await safe(db.select({ count: count() }).from(user));
+	const [err2, activeSellersRes] = await safe(
+		db.select({ count: count() }).from(sellerStores).where(eq(sellerStores.status, "active")),
+	);
+	const [err3, pendingSellersRes] = await safe(
+		db.select({ count: count() }).from(sellerStores).where(eq(sellerStores.status, "pending")),
+	);
+	const [err4, totalOrdersRes] = await safe(db.select({ count: count() }).from(orders));
+	const [err5, totalRevenueRes] = await safe(db.select({ total: sum(orders.totalAmount) }).from(orders));
 
-		return {
-			totalUsers: Number(totalUsers?.count ?? 0),
-			activeSellers: Number(activeSellers?.count ?? 0),
-			pendingSellers: Number(pendingSellers?.count ?? 0),
-			totalOrders: Number(totalOrders?.count ?? 0),
-			totalRevenue: Number(totalRevenue?.total ?? 0),
-		};
-	} catch {
-		return {
-			totalUsers: 0,
-			activeSellers: 0,
-			pendingSellers: 0,
-			totalOrders: 0,
-			totalRevenue: 0,
-		};
-	}
+	return {
+		totalUsers: Number(totalUsersRes?.[0]?.count ?? 0),
+		activeSellers: Number(activeSellersRes?.[0]?.count ?? 0),
+		pendingSellers: Number(pendingSellersRes?.[0]?.count ?? 0),
+		totalOrders: Number(totalOrdersRes?.[0]?.count ?? 0),
+		totalRevenue: Number(totalRevenueRes?.[0]?.total ?? 0),
+	};
 }
 
 /**
  * Get pending seller store approvals
  */
 export async function getPendingSellers() {
-	try {
-		return await db
+	const [err, rows] = await safe(
+		db
 			.select({
 				store: sellerStores,
 				owner: user,
@@ -60,10 +49,11 @@ export async function getPendingSellers() {
 			.from(sellerStores)
 			.innerJoin(user, eq(sellerStores.userId, user.id))
 			.where(eq(sellerStores.status, "pending"))
-			.orderBy(desc(sellerStores.createdAt));
-	} catch {
-		return [];
-	}
+			.orderBy(desc(sellerStores.createdAt)),
+	);
+
+	if (err || !rows) return [];
+	return rows;
 }
 
 /**
@@ -107,23 +97,24 @@ export async function rejectSellerStore(storeId: string) {
  * Get all categories with product counts
  */
 export async function getAllCategoriesWithCounts() {
-	try {
-		const allCategories = await db.select().from(categories);
-		const productCounts = await db
+	const [err, allCategories] = await safe(db.select().from(categories));
+	if (err || !allCategories) return [];
+
+	const [pErr, productCounts] = await safe(
+		db
 			.select({
 				categoryId: products.categoryId,
 				count: count(),
 			})
 			.from(products)
-			.groupBy(products.categoryId);
+			.groupBy(products.categoryId),
+	);
 
-		const countMap = new Map(productCounts.map((p) => [p.categoryId, Number(p.count)]));
+	const countsList = pErr || !productCounts ? [] : productCounts;
+	const countMap = new Map(countsList.map((p) => [p.categoryId, Number(p.count)]));
 
-		return allCategories.map((cat) => ({
-			...cat,
-			productCount: countMap.get(cat.id) ?? 0,
-		}));
-	} catch {
-		return [];
-	}
+	return allCategories.map((cat) => ({
+		...cat,
+		productCount: countMap.get(cat.id) ?? 0,
+	}));
 }

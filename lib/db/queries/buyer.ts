@@ -10,6 +10,7 @@
 import { and, eq, ilike, inArray, type SQL, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cartItems, carts, categories, products, sellerStores, variants } from "@/lib/db/schema";
+import { safe } from "@/lib/utils";
 
 /**
  * Fetch list of active products with optional filters
@@ -35,18 +36,22 @@ export async function getActiveProducts(options?: {
 			whereConditions.push(eq(products.categoryId, options.category));
 		}
 
-		const rows = await db
-			.select({
-				product: products,
-				category: categories,
-				sellerStore: sellerStores,
-			})
-			.from(products)
-			.leftJoin(categories, eq(products.categoryId, categories.id))
-			.leftJoin(sellerStores, eq(products.sellerStoreId, sellerStores.id))
-			.where(and(...whereConditions))
-			.limit(limit)
-			.offset(offset);
+		const [err, rows] = await safe(
+			db
+				.select({
+					product: products,
+					category: categories,
+					sellerStore: sellerStores,
+				})
+				.from(products)
+				.leftJoin(categories, eq(products.categoryId, categories.id))
+				.leftJoin(sellerStores, eq(products.sellerStoreId, sellerStores.id))
+				.where(and(...whereConditions))
+				.limit(limit)
+				.offset(offset),
+		);
+
+		if (err || !rows) return [];
 
 		// Fetch variants for each product
 		const productIds = rows.map((r) => r.product.id);
@@ -87,21 +92,23 @@ export async function getActiveProducts(options?: {
  * Get product details by ID or Slug
  */
 export async function getProductByIdOrSlug(idOrSlug: string) {
-	const row = await db
-		.select({
-			product: products,
-			category: categories,
-			sellerStore: sellerStores,
-		})
-		.from(products)
-		.leftJoin(categories, eq(products.categoryId, categories.id))
-		.leftJoin(sellerStores, eq(products.sellerStoreId, sellerStores.id))
-		.where(
-			and(eq(products.active, true), sql`(${products.id} = ${idOrSlug} OR ${products.slug} = ${idOrSlug})`),
-		)
-		.limit(1);
+	const [err, row] = await safe(
+		db
+			.select({
+				product: products,
+				category: categories,
+				sellerStore: sellerStores,
+			})
+			.from(products)
+			.leftJoin(categories, eq(products.categoryId, categories.id))
+			.leftJoin(sellerStores, eq(products.sellerStoreId, sellerStores.id))
+			.where(
+				and(eq(products.active, true), sql`(${products.id} = ${idOrSlug} OR ${products.slug} = ${idOrSlug})`),
+			)
+			.limit(1),
+	);
 
-	if (!row.length) return null;
+	if (err || !row || !row.length) return null;
 
 	const { product, category, sellerStore } = row[0];
 

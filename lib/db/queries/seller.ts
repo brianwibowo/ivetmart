@@ -11,86 +11,77 @@
 import { and, count, eq, sum } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { orderSellers, orders, products, sellerStores, user, variants } from "@/lib/db/schema";
+import { safe } from "@/lib/utils";
 
 /**
  * Get seller store by user ID
  */
 export async function getSellerStoreByUserId(userId: string) {
-	try {
-		const rows = await db.select().from(sellerStores).where(eq(sellerStores.userId, userId)).limit(1);
-		return rows[0] ?? null;
-	} catch {
-		return null;
-	}
+	const [err, rows] = await safe(
+		db.select().from(sellerStores).where(eq(sellerStores.userId, userId)).limit(1),
+	);
+	if (err || !rows) return null;
+	return rows[0] ?? null;
 }
 
 /**
  * Get seller store by slug (public store page)
  */
 export async function getSellerStoreBySlug(slug: string) {
-	try {
-		const rows = await db
+	const [err, rows] = await safe(
+		db
 			.select()
 			.from(sellerStores)
 			.where(and(eq(sellerStores.slug, slug), eq(sellerStores.status, "active")))
-			.limit(1);
-		return rows[0] ?? null;
-	} catch {
-		return null;
-	}
+			.limit(1),
+	);
+	if (err || !rows) return null;
+	return rows[0] ?? null;
 }
 
 /**
  * Get seller products list
  */
 export async function getSellerProducts(sellerStoreId: string) {
-	try {
-		const sellerProducts = await db.select().from(products).where(eq(products.sellerStoreId, sellerStoreId));
+	const [err, sellerProducts] = await safe(
+		db.select().from(products).where(eq(products.sellerStoreId, sellerStoreId)),
+	);
+	if (err || !sellerProducts) return [];
 
-		const productIds = sellerProducts.map((p) => p.id);
-		const productVariants = productIds.length ? await db.select().from(variants) : [];
+	const productIds = sellerProducts.map((p) => p.id);
+	const [vErr, productVariants] = productIds.length ? await safe(db.select().from(variants)) : [null, []];
+	const variantsList = vErr || !productVariants ? [] : productVariants;
 
-		return sellerProducts.map((p) => ({
-			...p,
-			variants: productVariants.filter((v) => v.productId === p.id),
-		}));
-	} catch {
-		return [];
-	}
+	return sellerProducts.map((p) => ({
+		...p,
+		variants: variantsList.filter((v) => v.productId === p.id),
+	}));
 }
 
 /**
  * Get seller dashboard overview statistics
  */
 export async function getSellerStats(sellerStoreId: string) {
-	try {
-		const [totalProductsRes] = await db
-			.select({ count: count() })
-			.from(products)
-			.where(eq(products.sellerStoreId, sellerStoreId));
+	const [err1, totalProductsRes] = await safe(
+		db.select({ count: count() }).from(products).where(eq(products.sellerStoreId, sellerStoreId)),
+	);
 
-		const [ordersRes] = await db
-			.select({ count: count() })
-			.from(orderSellers)
-			.where(eq(orderSellers.sellerStoreId, sellerStoreId));
+	const [err2, ordersRes] = await safe(
+		db.select({ count: count() }).from(orderSellers).where(eq(orderSellers.sellerStoreId, sellerStoreId)),
+	);
 
-		const [revenueRes] = await db
+	const [err3, revenueRes] = await safe(
+		db
 			.select({ totalRevenue: sum(orderSellers.subtotal) })
 			.from(orderSellers)
-			.where(and(eq(orderSellers.sellerStoreId, sellerStoreId), eq(orderSellers.status, "completed")));
+			.where(and(eq(orderSellers.sellerStoreId, sellerStoreId), eq(orderSellers.status, "completed"))),
+	);
 
-		return {
-			totalProducts: Number(totalProductsRes?.count ?? 0),
-			totalOrders: Number(ordersRes?.count ?? 0),
-			totalRevenue: Number(revenueRes?.totalRevenue ?? 0),
-		};
-	} catch {
-		return {
-			totalProducts: 0,
-			totalOrders: 0,
-			totalRevenue: 0,
-		};
-	}
+	return {
+		totalProducts: Number(totalProductsRes?.[0]?.count ?? 0),
+		totalOrders: Number(ordersRes?.[0]?.count ?? 0),
+		totalRevenue: Number(revenueRes?.[0]?.totalRevenue ?? 0),
+	};
 }
 
 /**
