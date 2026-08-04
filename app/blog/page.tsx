@@ -19,13 +19,13 @@ import { YNSMedia } from "@/lib/yns-media";
 const POSTS_LIMIT = 24;
 
 export const metadata: Metadata = {
-	title: "Blog",
-	description: "News, guides, and stories from our team.",
+	title: "Blog & Artikel",
+	description: "Berita terbaru, panduan UMKM, dan cerita inspiratif dari ekosistem Ivet Mart UNISVET.",
 	alternates: { canonical: "/blog" },
 	openGraph: {
 		type: "website",
-		title: "Blog",
-		description: "News, guides, and stories from our team.",
+		title: "Blog & Artikel — Ivet Mart Marketplace",
+		description: "Berita terbaru, panduan UMKM, dan cerita inspiratif dari ekosistem Ivet Mart UNISVET.",
 		url: "/blog",
 	},
 };
@@ -57,7 +57,7 @@ export default async function BlogPage() {
 	const blogJsonLd = {
 		"@context": "https://schema.org",
 		"@type": "Blog",
-		name: "Blog",
+		name: "Blog Ivet Mart",
 		url: `${baseUrl}/blog`,
 		blogPost: posts.map((post) => ({
 			"@type": "BlogPosting",
@@ -78,7 +78,7 @@ export default async function BlogPage() {
 					<BreadcrumbList>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link href="/">Home</Link>
+								<Link href="/">Beranda</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
@@ -87,21 +87,27 @@ export default async function BlogPage() {
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
-				<h1 className="mt-4 text-4xl font-medium tracking-tight">Blog</h1>
-				<p className="mt-3 text-lg text-muted-foreground">News, guides, and stories from our team.</p>
+				<h1 className="mt-4 text-4xl sm:text-5xl font-bold tracking-tight font-serif text-foreground">
+					Blog & Kabar Terbaru
+				</h1>
+				<p className="mt-3 text-lg text-muted-foreground">
+					Berita kampus, panduan wirausaha UMKM Semarang, dan cerita inspiratif dari Ivet Mart.
+				</p>
 			</div>
 
 			{/* Posts */}
 			{posts.length === 0 ? (
-				<div className="rounded-lg border border-border bg-secondary/30 p-12 text-center">
-					<h2 className="text-xl font-medium tracking-tight">No posts yet</h2>
-					<p className="mt-2 text-muted-foreground">Check back soon for new articles.</p>
+				<div className="rounded-2xl border border-border/80 bg-card p-12 text-center shadow-xs">
+					<h2 className="text-xl font-bold tracking-tight font-serif text-foreground">Belum Ada Artikel</h2>
+					<p className="mt-2 text-muted-foreground text-sm">
+						Artikel dan kabar terbaru akan segera dipublikasikan. Silakan kembali lagi nanti!
+					</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
 					{posts.map((post) => (
 						<YnsLink key={post.id} prefetch="eager" href={`/blog/${post.slug}`} className="group">
-							<div className="relative aspect-[3/2] bg-secondary rounded-2xl overflow-hidden mb-4">
+							<div className="relative aspect-[3/2] bg-secondary rounded-2xl overflow-hidden mb-4 border border-border/60 shadow-xs">
 								{post.image && (
 									<YNSMedia
 										src={post.image}
@@ -115,7 +121,7 @@ export default async function BlogPage() {
 							<div className="space-y-2">
 								<div className="flex items-center gap-3 text-xs text-muted-foreground">
 									{post.tag && (
-										<span className="rounded-full bg-secondary px-3 py-1 font-medium text-foreground">
+										<span className="rounded-full bg-[#80070A]/10 text-[#80070A] px-3 py-1 font-semibold">
 											{post.tag}
 										</span>
 									)}
@@ -123,7 +129,7 @@ export default async function BlogPage() {
 										{formatDate(post.publishedAt ?? post.createdAt)}
 									</time>
 								</div>
-								<h2 className="text-lg font-medium tracking-tight text-foreground group-hover:text-foreground/70 transition-colors">
+								<h2 className="text-lg font-bold tracking-tight text-foreground group-hover:text-[#80070A] transition-colors font-serif">
 									{post.title}
 								</h2>
 							</div>

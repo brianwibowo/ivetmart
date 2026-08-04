@@ -6,13 +6,15 @@ import { YnsLink } from "@/components/yns-link";
 import { JsonLdScript } from "@/lib/json-ld";
 
 export const metadata: Metadata = {
-	title: "FAQ",
-	description: "Frequently asked questions about orders, payments, shipping, returns, and more.",
+	title: "Pusat Bantuan & FAQ",
+	description:
+		"Jawaban atas pertanyaan umum seputar pemesanan, pembayaran, pengiriman, pendaftaran toko, dan pengembalian di Ivet Mart.",
 	alternates: { canonical: "/faq" },
 	openGraph: {
 		type: "website",
-		title: "Frequently Asked Questions",
-		description: "Frequently asked questions about orders, payments, shipping, returns, and more.",
+		title: "Pusat Bantuan & FAQ — Ivet Mart Marketplace",
+		description:
+			"Jawaban atas pertanyaan umum seputar pemesanan, pembayaran, pengiriman, pendaftaran toko, dan pengembalian di Ivet Mart.",
 		url: "/faq",
 	},
 };
@@ -43,7 +45,7 @@ function CategoryNav({ categories }: { categories: FAQCategory[] }) {
 				<a
 					key={category.id}
 					href={`#${category.id}`}
-					className="rounded-full border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+					className="rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:bg-[#80070A] hover:text-white hover:border-[#80070A]"
 				>
 					{category.title}
 				</a>
@@ -55,13 +57,19 @@ function CategoryNav({ categories }: { categories: FAQCategory[] }) {
 function FAQSection({ category }: { category: FAQCategory }) {
 	return (
 		<section id={category.id} className="scroll-mt-24">
-			<h2 className="text-2xl font-medium tracking-tight mb-4">{category.title}</h2>
-			<Accordion type="single" collapsible className="rounded-lg border border-border px-4">
+			<h2 className="text-2xl font-bold tracking-tight mb-4 font-serif text-foreground">{category.title}</h2>
+			<Accordion
+				type="single"
+				collapsible
+				className="rounded-2xl border border-border/80 bg-card px-4 shadow-xs"
+			>
 				{category.questions.map((item, index) => (
 					<AccordionItem key={`${category.id}-${index}`} value={`${category.id}-${index}`}>
-						<AccordionTrigger>{item.question}</AccordionTrigger>
+						<AccordionTrigger className="text-base font-semibold hover:no-underline text-left">
+							{item.question}
+						</AccordionTrigger>
 						<AccordionContent>
-							<p className="text-muted-foreground leading-relaxed">{item.answer}</p>
+							<p className="text-muted-foreground leading-relaxed text-sm">{item.answer}</p>
 						</AccordionContent>
 					</AccordionItem>
 				))}
@@ -72,14 +80,14 @@ function FAQSection({ category }: { category: FAQCategory }) {
 
 function ContactCard() {
 	return (
-		<div className="rounded-lg border border-border bg-secondary/30 p-8 text-center">
-			<h2 className="text-2xl font-medium tracking-tight">Still have questions?</h2>
-			<p className="mt-2 text-muted-foreground">
-				We're here to help. Reach out and we'll get back to you as soon as possible.
+		<div className="rounded-2xl border border-border/80 bg-gradient-to-br from-[#80070A]/5 via-background to-amber-500/5 p-8 text-center shadow-xs">
+			<h2 className="text-2xl font-bold tracking-tight font-serif">Masih Punya Pertanyaan Lain?</h2>
+			<p className="mt-2 text-muted-foreground max-w-md mx-auto text-sm">
+				Tim Bantuan Ivet Mart siap membantu Anda. Silakan hubungi kami untuk informasi lebih lanjut.
 			</p>
-			<div className="mt-6 inline-flex items-center gap-2 text-sm font-medium">
-				<Mail className="h-4 w-4" />
-				<span>Contact us via the details on our website</span>
+			<div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-background px-6 py-2.5 text-sm font-semibold text-foreground shadow-xs">
+				<Mail className="h-4 w-4 text-[#80070A]" />
+				<span>Kontak: support@techno-ivetmart.id</span>
 			</div>
 		</div>
 	);
@@ -96,13 +104,16 @@ export default function FAQPage() {
 					href="/"
 					className="text-sm text-muted-foreground hover:text-foreground transition-colors"
 				>
-					Home
+					Beranda
 				</YnsLink>
 				<span className="mx-2 text-muted-foreground">/</span>
-				<span className="text-sm">FAQ</span>
-				<h1 className="mt-4 text-4xl font-medium tracking-tight">Frequently Asked Questions</h1>
-				<p className="mt-3 text-lg text-muted-foreground">
-					Find answers to the most common questions about your orders, payments, shipping, and more.
+				<span className="text-sm text-foreground font-medium">Bantuan</span>
+				<h1 className="mt-4 text-4xl sm:text-5xl font-bold tracking-tight font-serif text-foreground">
+					Pusat Bantuan & FAQ
+				</h1>
+				<p className="mt-3 text-lg text-muted-foreground leading-relaxed">
+					Temukan jawaban lengkap atas pertanyaan umum seputar pesanan, pembayaran, pengiriman, dan
+					pendaftaran toko.
 				</p>
 			</div>
 

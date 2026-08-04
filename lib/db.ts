@@ -15,10 +15,12 @@ const connectionString = process.env.DATABASE_URL || "postgres://build:build@loc
  * Raw postgres client — use `db` (Drizzle wrapper) instead of this directly.
  * `max: 10` keeps connections reasonable for Next.js dev + serverless.
  */
+const isTestEnv = process.env.NODE_ENV === "test" || process.env.BUN_ENV === "test" || !!process.env.CI;
+
 const client = postgres(connectionString, {
 	max: 10,
 	idle_timeout: 20,
-	connect_timeout: 10,
+	connect_timeout: isTestEnv ? 1 : 5,
 });
 
 /**
