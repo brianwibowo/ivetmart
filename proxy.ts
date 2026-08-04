@@ -19,9 +19,9 @@ type RateLimitRule = {
 };
 
 const RATE_LIMIT_RULES: [string, RateLimitRule][] = [
-	["/api/auth", { windowMs: 60_000, maxRequests: 10 }],
-	["/checkout", { windowMs: 60_000, maxRequests: 5 }],
-	["/seller/register", { windowMs: 60_000, maxRequests: 3 }],
+	["/api/auth", { windowMs: 60_000, maxRequests: 60 }],
+	["/checkout", { windowMs: 60_000, maxRequests: 30 }],
+	["/seller/register", { windowMs: 60_000, maxRequests: 20 }],
 ];
 
 // ─── In-Memory Store ────────────────────────────────────
@@ -71,12 +71,15 @@ export function proxy(request: NextRequest) {
 
 	if (matchedRule) {
 		const [prefix, rule] = matchedRule;
-		const ip =
-			request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-			request.headers.get("x-real-ip") ||
-			"unknown";
+		const clientIp =
+			request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip");
 
-		const rateLimitKey = `${ip}:${prefix}`;
+		// Skip rate limiting if IP cannot be isolated to prevent shared lockouts on Docker proxy
+		if (!clientIp || clientIp === "unknown" || clientIp === "127.0.0.1" || clientIp === "::1") {
+			return NextResponse.next();
+		}
+
+		const rateLimitKey = `${clientIp}:${prefix}`;
 
 		if (isRateLimited(rateLimitKey, rule)) {
 			return NextResponse.json(
